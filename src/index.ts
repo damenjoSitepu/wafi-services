@@ -1,18 +1,9 @@
-import express, { Application, Request, Response } from "express";
+import "module-alias/register";
+import App from "./app";
 
 const PORT: number = Number(process.env.PORT) || 8080;
 
-const app: Application = express();
-app.enable('trust proxy');
+const app = new App(PORT);
+app.listen();
 
-app.get("/", (req: Request, res: Response) => {
-  return res.json({
-    error: false,
-    message: "Wafi Services Runs Perfectly!",
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
 
