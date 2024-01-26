@@ -1,15 +1,15 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { statement } from "@/utils/constants/statement.constant";
 import ControllerContract from "@/utils/contracts/controller.contract";
-import TaskService from "@/resources/task/task.service";
-import authMiddleware from "@/middlewares/auth.middleware";
+import { UserCredential } from "firebase/auth";
+import AuthService from "@/resources/auth/auth.service";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
 
-class TaskController implements ControllerContract {
+class LoginController implements ControllerContract {
   /**
    * Define Path 
    */
-  public path: string = "/task";
+  public path: string = "/auth";
 
   /**
    * Define Router
@@ -19,7 +19,7 @@ class TaskController implements ControllerContract {
   /**
    * Define Services
    */
-  private _taskService: TaskService = new TaskService();
+  // private _taskService: TaskService = new TaskService();
 
   /**
    * Initialize Data
@@ -36,19 +36,23 @@ class TaskController implements ControllerContract {
    * @param {NextFunction} next 
    * @returns {Promise<Response | void>}
    */
-  private _store = async(
+  private _login = async(
     req: Request, 
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      await this._taskService.store(req.body);
-      return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
-        statement: statement.TASK.CREATED,
+      const userCredential: UserCredential = await new AuthService().signInWithEmailAndPassword(
+        String(req.body.email),
+        String(req.body.password)
+      );
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.AUTH.SUCCESS_LOGIN,
+        data: userCredential
       });
     } catch (e: any) {
-      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
-        statement: statement.TASK.FAIL_CREATED,
+      return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+        statement: statement.AUTH.FAIL_LOGIN,
       });
     }
   }
@@ -58,11 +62,10 @@ class TaskController implements ControllerContract {
    */
   private _initializeRoutes(): void {
     this.router.post(
-      `${this.path}`,
-      authMiddleware,
-      this._store
+      `${this.path}/login`,
+      this._login
     );
   }
 }
 
-export default TaskController;
+export default LoginController;

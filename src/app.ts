@@ -1,6 +1,11 @@
 import express, { Application, Request, Response } from "express";
 import { statement } from "@/utils/constants/statement.constant";
+import mongoose from "mongoose";
+import cors from "cors";
 import ControllerContract from "@/utils/contracts/controller.contract";
+import compression from "compression";
+import FirebaseService from "@/utils/services/firebase.service";
+import admin from "firebase-admin";
  
 class App {
   /**
@@ -34,6 +39,9 @@ class App {
     this._apiVersion = apiVersion;
     this._application = express();
     this._enableConfig();
+    this._initializeFirebase();
+    this._initializeDatabase();
+    this._initializeMiddleware();
     this._initializeControllers(controllers);
   }
 
@@ -64,6 +72,51 @@ class App {
       controllers.forEach((controller: ControllerContract) => {
         this._application.use(`/api/${this._apiVersion}`, controller.router);
       });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Initialize Firebase Auth
+   * 
+   * @returns {Promise<void>}
+   */
+  private async _initializeFirebase(): Promise<void> {
+    try {
+      FirebaseService.getInstance().setFirebaseApp();
+      FirebaseService.getInstance().setFirebaseAuth();
+      FirebaseService.getInstance().setFirebaseAdmin();
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Initialize Mongo DB Database
+   */
+  private async _initializeDatabase(): Promise<void> {
+    try {
+      await mongoose.connect(process.env.MONGO_DB_URL || "");
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Initialize Express Middleware Application
+   * 
+   * @returns {void}
+   */
+  private _initializeMiddleware(): void {
+    try {
+      this._application.use(cors());
+      this._application.use(express.json());
+      this._application.use(express.urlencoded({
+        extended: false,
+        limit: 10000
+      }));
+      this._application.use(compression());
     } catch (e: any) {
       throw new Error(e.message);
     }

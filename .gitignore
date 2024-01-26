@@ -3,3 +3,4 @@
 /app.yaml
 /package-lock.json
 .env
+/serviceAccountKey.json

@@ -8,8 +8,10 @@
     "baseUrl": "./src",
     "paths": {
       "@/utils/*": ["utils/*"],
-      "@/resources/*": ["resources/*"]
-    }
+      "@/resources/*": ["resources/*"],
+      "@/middlewares/*": ["middlewares/*"]
+    },
+    "resolveJsonModule": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"],
