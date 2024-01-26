@@ -48,7 +48,6 @@ class LoginController implements ControllerContract {
       );
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.AUTH.SUCCESS_LOGIN,
-        data: userCredential
       });
     } catch (e: any) {
       return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
