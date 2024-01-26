@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const TaskSchema = new Schema({
-  wuid: {
+  uid: {
     type: String,
     required: true,
   },

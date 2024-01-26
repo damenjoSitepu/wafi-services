@@ -1,5 +1,6 @@
 import { TaskModel } from "@/resources/task/task.model";
 import { task } from "@/resources/task/task.type";
+import { user } from "@/resources/user/user.type";
 
 class TaskService {
   /**
@@ -13,10 +14,10 @@ class TaskService {
    * @param {task.Request} task 
    * @returns {Promise<void>}
    */
-  public async store(task: task.Request): Promise<void> {
+  public async store(user: user.Data ,task: task.Request): Promise<void> {
     try {
       await this._taskModel.create({
-        wuid: "1234",
+        uid: user.uid,
         name: task.name,
         order: task.order,
         createdAt: Date.now(),

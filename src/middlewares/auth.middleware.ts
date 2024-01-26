@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import HttpException from "@/utils/exceptions/http.exception";
 import { statement } from "@/utils/constants/statement.constant";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
 import FirebaseService from "@/utils/services/firebase.service";

@@ -3,6 +3,7 @@ export namespace statement {
     INITIALIZED: "Wafi Services Run Perfectly",
     NO_CONTROLLERS: "No controllers found! Please check your app configuration once again!",
     INVALID_API_VERSION: "Invalid api version! Please check your app configuration once again!",
+    INVALID_REQUEST: "Sorry, but we could not process your request for now. Please try again later",
   };
 
   export const FIREBASE_APP = {

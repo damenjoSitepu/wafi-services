@@ -2,8 +2,9 @@ import { Router, Request, Response, NextFunction } from "express";
 import { statement } from "@/utils/constants/statement.constant";
 import ControllerContract from "@/utils/contracts/controller.contract";
 import TaskService from "@/resources/task/task.service";
-import authMiddleware from "@/middlewares/auth.middleware";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
+import validationMiddleware from "@/middlewares/validation.middleware";
+import { taskValidation } from "@/resources/task/task.validation";
 
 class TaskController implements ControllerContract {
   /**
@@ -42,7 +43,7 @@ class TaskController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      await this._taskService.store(req.body);
+      await this._taskService.store(req.user,req.body);
       return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
         statement: statement.TASK.CREATED,
       });
@@ -59,7 +60,7 @@ class TaskController implements ControllerContract {
   private _initializeRoutes(): void {
     this.router.post(
       `${this.path}`,
-      authMiddleware,
+      validationMiddleware(taskValidation.create),
       this._store
     );
   }
