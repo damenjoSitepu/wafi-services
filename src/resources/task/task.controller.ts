@@ -5,6 +5,7 @@ import TaskService from "@/resources/task/task.service";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
 import validationMiddleware from "@/middlewares/validation.middleware";
 import { taskValidation } from "@/resources/task/task.validation";
+import authMiddleware from "@/middlewares/auth.middleware";
 
 class TaskController implements ControllerContract {
   /**
@@ -60,6 +61,7 @@ class TaskController implements ControllerContract {
   private _initializeRoutes(): void {
     this.router.post(
       `${this.path}`,
+      authMiddleware,
       validationMiddleware(taskValidation.create),
       this._store
     );

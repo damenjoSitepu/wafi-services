@@ -5,7 +5,6 @@ import cors from "cors";
 import ControllerContract from "@/utils/contracts/controller.contract";
 import compression from "compression";
 import FirebaseService from "@/utils/services/firebase.service";
-import authMiddleware from "@/middlewares/auth.middleware";
  
 class App {
   /**
@@ -117,7 +116,6 @@ class App {
         limit: 10000
       }));
       this._application.use(compression());
-      this._application.use(authMiddleware);
     } catch (e: any) {
       throw new Error(e.message);
     }
