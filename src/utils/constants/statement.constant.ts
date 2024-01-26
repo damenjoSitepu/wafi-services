@@ -22,5 +22,7 @@ export namespace statement {
   export const TASK = {
     CREATED: "Successfully creating your task!",
     FAIL_CREATED: "Fail when creating your task!",
+    GET: "Successfully getting your task!",
+    FAIL_GET: "Fail when getting your task!",
   };
 }

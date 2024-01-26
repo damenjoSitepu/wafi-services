@@ -6,6 +6,7 @@ import { httpResponseStatusCode } from "@/utils/constants/http-response-status-c
 import validationMiddleware from "@/middlewares/validation.middleware";
 import { taskValidation } from "@/resources/task/task.validation";
 import authMiddleware from "@/middlewares/auth.middleware";
+import { task } from "./task.type";
 
 class TaskController implements ControllerContract {
   /**
@@ -28,6 +29,34 @@ class TaskController implements ControllerContract {
    */
   public constructor() {
     this._initializeRoutes();
+  }
+
+  /**
+   * Get Tasks
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _get = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const tasks: task.Data[] = await this._taskService.get(req.user) as task.Data[];
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.TASK.GET,
+        data: {
+          tasks
+        },
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_GET,
+      });
+    }
   }
 
   /**
@@ -65,6 +94,12 @@ class TaskController implements ControllerContract {
       validationMiddleware(taskValidation.create),
       this._store
     );
+
+    this.router.get(
+      `${this.path}`,
+      authMiddleware,
+      this._get
+    )
   }
 }
 

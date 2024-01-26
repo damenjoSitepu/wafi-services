@@ -9,6 +9,21 @@ class TaskService {
   private _taskModel = TaskModel;
 
   /**
+   * Get Task
+   * 
+   * @returns {Promise<any>}
+   */
+  public async get(user: user.Data): Promise<any> {
+    try {
+      return await this._taskModel.find({
+        uid: user.uid
+      }).limit(25);
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
    * Store Task
    * 
    * @param {task.Request} task 
