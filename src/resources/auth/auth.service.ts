@@ -2,20 +2,21 @@ import AuthServiceContract from "@/resources/auth/auth-service.contract";
 import { statement } from "@/utils/constants/statement.constant";
 import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
-import { UserCredential, signInWithEmailAndPassword,  } from "firebase/auth";
+import { Auth, UserCredential, signInWithEmailAndPassword } from "firebase/auth";
 
 class AuthService implements AuthServiceContract {
   /**
    * Sign In With Email and Password
    * 
+   * @param {Auth} auth
    * @param {string} email
    * @param {string} password 
    * @returns {Promise<UserCredential>}
    */
-  public async signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
+  public async signInWithEmailAndPassword(auth: Auth ,email: string, password: string): Promise<UserCredential> {
     try {
       return await signInWithEmailAndPassword(
-        FirebaseService.getInstance().getFirebaseAuth(),
+        auth,
         email,
         password
       );

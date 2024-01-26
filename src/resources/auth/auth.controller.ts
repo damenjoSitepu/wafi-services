@@ -1,12 +1,11 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { statement } from "@/utils/constants/statement.constant";
-import ControllerContract from "@/utils/contracts/controller.contract";
-import { browserSessionPersistence, setPersistence } from "firebase/auth";
-import AuthService from "@/resources/auth/auth.service";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
-import { getAuth } from "firebase/auth";
+import { statement } from "@/utils/constants/statement.constant";
+import FirebaseService from "@/utils/services/firebase.service";
+import { NextFunction, Router, Response, Request } from "express";
+import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 
-class LoginController implements ControllerContract {
+
+class AuthController {
   /**
    * Define Path 
    */
@@ -16,7 +15,7 @@ class LoginController implements ControllerContract {
    * Define Router
    */
   public router: Router = Router();
-
+  
   /**
    * Initialize Data
    */
@@ -25,25 +24,30 @@ class LoginController implements ControllerContract {
   }
 
   /**
-   * Login API
+   * Verify Token
    * 
    * @param {Request} req 
    * @param {Response} res 
    * @param {NextFunction} next 
    * @returns {Promise<Response | void>}
    */
-  private _login = async(
+  private _ = async(
     req: Request, 
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
     try {
+      const decodedIdToken: DecodedIdToken = await FirebaseService.getInstance().getFirebaseAdmin().auth().verifyIdToken(req.body.token);
+      if (!decodedIdToken) {
+        throw new Error();
+      }
+
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.AUTH.SUCCESS_LOGIN,
       });
     } catch (e: any) {
       return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
-        statement: statement.AUTH.FAIL_LOGIN,
+        statement: statement.AUTH.FAIL_ACCESSING_SOURCE,
       });
     }
   }
@@ -53,10 +57,10 @@ class LoginController implements ControllerContract {
    */
   private _initializeRoutes(): void {
     this.router.post(
-      `${this.path}/login`,
-      this._login
+      `${this.path}`,
+      this._
     );
   }
 }
 
-export default LoginController;
+export default AuthController;
