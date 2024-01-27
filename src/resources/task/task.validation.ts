@@ -5,4 +5,11 @@ export namespace taskValidation {
     name: Joi.string().required(),
     order: Joi.number().required(),
   }); 
+
+  export const swap = Joi.object({
+    firstId: Joi.string().required(),
+    firstOrder: Joi.number().required(),
+    secondId: Joi.string().required(),
+    secondOrder: Joi.number().required(),
+  })
 }

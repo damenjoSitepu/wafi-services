@@ -28,11 +28,41 @@ class TaskService {
       }
 
       return await this._taskModel.find(query).sort({
-        createdAt: -1
+        order: 1
       }).limit(25);
     } catch (e: any) {
       throw new Error(e.message);
     }
+  }
+
+  /**
+   * Swap The Task Order
+   * 
+   * @param {user.Data} user 
+   * @param {string} firstId 
+   * @param {number} firstOrder 
+   * @param {string} secondId 
+   * @param {number} secondOrder 
+   */
+  public async swap(user: user.Data ,firstId: string, firstOrder: number, secondId: string, secondOrder: number): Promise<void> {
+    try {
+      // First Data
+      await this._taskModel.updateOne({
+        uid: user.uid,
+        _id: new mongoose.mongo.ObjectId(firstId)
+      }, {
+        order: firstOrder,
+      });
+      // Second Data
+      await this._taskModel.updateOne({
+        uid: user.uid,
+        _id: new mongoose.mongo.ObjectId(secondId)
+      }, {
+        order: secondOrder,
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    } 
   }
 
   /**

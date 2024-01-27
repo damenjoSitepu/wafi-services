@@ -121,6 +121,40 @@ class TaskController implements ControllerContract {
   }
 
   /**
+   * Swap Task API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _swap = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+      const { firstId, firstOrder, secondId, secondOrder } = req.body;
+      await this._taskService.swap(req.user, firstId, firstOrder, secondId, secondOrder);
+      await session.commitTransaction();
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.TASK.SWAP,
+      });
+    } catch (e: any) {
+      await session.abortTransaction();
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_SWAP,
+      });
+    } finally {
+      session.endSession();
+    }
+  }
+
+  /**
    * Initialize Routes
    */
   private _initializeRoutes(): void {
@@ -142,6 +176,13 @@ class TaskController implements ControllerContract {
       authMiddleware,
       this._destroy
     );
+
+    this.router.post(
+      `${this.path}/swap`,
+      authMiddleware,
+      validationMiddleware(taskValidation.swap),
+      this._swap
+    )
   }
 }
 

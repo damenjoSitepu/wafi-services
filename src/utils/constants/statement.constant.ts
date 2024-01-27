@@ -26,5 +26,7 @@ export namespace statement {
     FAIL_GET: "Fail when getting your task!",
     DESTROY: "Successfully deleting your task!",
     FAIL_DESTROY: "Fail when deleting your task!",
+    SWAP: "Successfully swap your task order!",
+    FAIL_SWAP: "Fail when swap your task order!",
   };
 }
