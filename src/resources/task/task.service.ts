@@ -43,8 +43,16 @@ class TaskService {
    * @param {number} firstOrder 
    * @param {string} secondId 
    * @param {number} secondOrder 
+   * @param {mongoose.mongo.ClientSession} session
    */
-  public async swap(user: user.Data ,firstId: string, firstOrder: number, secondId: string, secondOrder: number): Promise<void> {
+  public async swap(
+    user: user.Data,
+    firstId: string,
+    firstOrder: number,
+    secondId: string,
+    secondOrder: number,
+    session: mongoose.mongo.ClientSession
+  ): Promise<void> {
     try {
       // First Data
       await this._taskModel.updateOne({
@@ -52,6 +60,8 @@ class TaskService {
         _id: new mongoose.mongo.ObjectId(firstId)
       }, {
         order: firstOrder,
+      }, {
+        session,
       });
       // Second Data
       await this._taskModel.updateOne({
@@ -59,6 +69,8 @@ class TaskService {
         _id: new mongoose.mongo.ObjectId(secondId)
       }, {
         order: secondOrder,
+      }, {
+        session,
       });
     } catch (e: any) {
       throw new Error(e.message);

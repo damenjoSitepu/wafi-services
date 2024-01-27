@@ -138,7 +138,7 @@ class TaskController implements ControllerContract {
     try {
       session.startTransaction();
       const { firstId, firstOrder, secondId, secondOrder } = req.body;
-      await this._taskService.swap(req.user, firstId, firstOrder, secondId, secondOrder);
+      await this._taskService.swap(req.user, firstId, firstOrder, secondId, secondOrder, session);
       await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
