@@ -7,6 +7,7 @@ import validationMiddleware from "@/middlewares/validation.middleware";
 import { taskValidation } from "@/resources/task/task.validation";
 import authMiddleware from "@/middlewares/auth.middleware";
 import { task } from "./task.type";
+import mongoose from "mongoose";
 
 class TaskController implements ControllerContract {
   /**
@@ -45,7 +46,7 @@ class TaskController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const tasks: task.Data[] = await this._taskService.get(req.user) as task.Data[];
+      const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? "")) as task.Data[];
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.GET,
         data: {
@@ -83,6 +84,33 @@ class TaskController implements ControllerContract {
       });
     }
   }
+  
+  /**
+   * Destroy Task API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _destroy = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const id = new mongoose.mongo.ObjectId(String(req.query.id));
+      await this._taskService.destroy(req.user, id);
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.TASK.DESTROY,
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_DESTROY,
+      });
+    }
+  }
 
   /**
    * Initialize Routes
@@ -99,7 +127,13 @@ class TaskController implements ControllerContract {
       `${this.path}`,
       authMiddleware,
       this._get
-    )
+    );
+
+    this.router.delete(
+      `${this.path}`,
+      authMiddleware,
+      this._destroy
+    );
   }
 }
 

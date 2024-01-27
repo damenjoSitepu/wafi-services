@@ -24,5 +24,7 @@ export namespace statement {
     FAIL_CREATED: "Fail when creating your task!",
     GET: "Successfully getting your task!",
     FAIL_GET: "Fail when getting your task!",
+    DESTROY: "Successfully deleting your task!",
+    FAIL_DESTROY: "Fail when deleting your task!",
   };
 }

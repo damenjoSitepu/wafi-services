@@ -13,10 +13,18 @@ class TaskService {
    * 
    * @returns {Promise<any>}
    */
-  public async get(user: user.Data): Promise<any> {
+  public async get(user: user.Data, q: string ): Promise<any> {
     try {
-      return await this._taskModel.find({
-        uid: user.uid
+      const query: any = {
+        uid: user.uid,
+      };
+
+      if (q) {
+        query["name"] = { $regex: q, $options: "i" };
+      }
+
+      return await this._taskModel.find(query).sort({
+        createdAt: -1
       }).limit(25);
     } catch (e: any) {
       throw new Error(e.message);
@@ -42,6 +50,28 @@ class TaskService {
       throw new Error(e.message);
     }
   } 
+
+  /**
+   * Destroy The Task
+   * @param {user.Data} user 
+   * @param {string} id 
+   */
+  public async destroy(user: user.Data, id: any): Promise<void> {
+    try {
+      await this._taskModel.deleteOne({
+        $and: [
+          {
+            uid: user.uid,
+          },
+          {
+            _id: id
+          }
+        ]
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 }
 
 export default TaskService;
