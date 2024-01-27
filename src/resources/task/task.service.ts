@@ -150,6 +150,24 @@ class TaskService {
       throw new Error(e.message);
     }
   }
+
+  /**
+   * Find Certain Task
+   * 
+   * @param {user.Data} user 
+   * @param {string} id 
+   * @returns {Promise<task.Data | null>}
+   */
+  public async find(user: user.Data, id: string): Promise<task.Data | null> {
+    try {
+      return await this._taskModel.findOne({
+        uid: user.uid,
+        _id: new mongoose.mongo.ObjectId(id)
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 }
 
 export default TaskService;

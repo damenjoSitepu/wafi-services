@@ -155,6 +155,35 @@ class TaskController implements ControllerContract {
   }
 
   /**
+   * Show Task API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _show = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const task: task.Data | null = await this._taskService.find(req.user, String(req.params["id"] ?? ""))
+
+      return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
+        statement: statement.TASK.SHOW,
+        data: {
+          task,
+        },
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.INTERNAL_SERVER_ERROR).json({
+        statement: statement.TASK.FAIL_SHOW,
+      });
+    } 
+  }
+
+  /**
    * Initialize Routes
    */
   private _initializeRoutes(): void {
@@ -163,6 +192,12 @@ class TaskController implements ControllerContract {
       authMiddleware,
       validationMiddleware(taskValidation.create),
       this._store
+    );
+
+    this.router.get(
+      `${this.path}/:id`,
+      authMiddleware,
+      this._show
     );
 
     this.router.get(

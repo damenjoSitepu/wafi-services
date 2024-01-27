@@ -28,5 +28,7 @@ export namespace statement {
     FAIL_DESTROY: "Fail when deleting your task!",
     SWAP: "Successfully swap your task order!",
     FAIL_SWAP: "Fail when swap your task order!",
+    SHOW: "Successfully finding your task!",
+    FAIL_SHOW: "Fail when find your task!",
   };
 }
