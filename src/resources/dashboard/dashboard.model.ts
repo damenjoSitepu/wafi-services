@@ -1,16 +1,24 @@
 import mongoose, { Schema } from "mongoose";
 
-const TaskSchema = new Schema({
+const DashboardSchema = new Schema({
   uid: {
     type: String,
     required: true,
   },
-  name: {
+  type: {
     type: String,
     required: true,
   },
-  order: {
-    type: Number,
+  key: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: String,
     required: true,
   },
   createdAt: {
@@ -23,4 +31,4 @@ const TaskSchema = new Schema({
   },
 });
 
-export const TaskModel = mongoose.model("tasks", TaskSchema);
+export const DashboardModel = mongoose.model("dashboards", DashboardSchema, "dashboards");
