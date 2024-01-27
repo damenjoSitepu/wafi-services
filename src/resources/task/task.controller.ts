@@ -73,15 +73,23 @@ class TaskController implements ControllerContract {
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+    
     try {
-      await this._taskService.store(req.user,req.body);
+      session.startTransaction();
+      await this._taskService.store(req.user, req.body, session);
+      await session.commitTransaction();
+
       return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
         statement: statement.TASK.CREATED,
       });
     } catch (e: any) {
+      await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
         statement: statement.TASK.FAIL_CREATED,
       });
+    } finally {
+      session.endSession();
     }
   }
   

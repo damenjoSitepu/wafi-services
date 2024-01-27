@@ -2,6 +2,7 @@ import { TaskModel } from "@/resources/task/task.model";
 import { DashboardModel } from "@/resources/dashboard/dashboard.model"
 import { task } from "@/resources/task/task.type";
 import { user } from "@/resources/user/user.type";
+import mongoose from "mongoose";
 
 class TaskService {
   /**
@@ -40,7 +41,7 @@ class TaskService {
    * @param {task.Request} task 
    * @returns {Promise<void>}
    */
-  public async store(user: user.Data ,task: task.Request): Promise<void> {
+  public async store(user: user.Data, task: task.Request, session: mongoose.mongo.ClientSession): Promise<void> {  
     try {
       let dashboard: any = {
         uid: user.uid,
@@ -67,21 +68,23 @@ class TaskService {
         }, {
           value: dashboard.value,
           updatedAt: Date.now(),
+        }, {
+          session
         });
       } else {
-        await this._dashboardModel.create(dashboard);
+        await this._dashboardModel.create([dashboard], { session });
       }
 
-      await this._taskModel.create({
-        uid: user.uid,
-        name: task.name,
-        order: Number(dashboard.value),
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
+      await this._taskModel.create([{
+          uid: user.uid,
+          name: task.name,
+          order: Number(dashboard.value),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }], { session });
     } catch (e: any) {
       throw new Error(e.message);
-    }
+    } 
   } 
 
   /**
