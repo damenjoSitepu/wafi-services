@@ -182,7 +182,8 @@ class TaskService {
         uid: user.uid,
         _id: new mongoose.mongo.ObjectId(id)
       }, {
-        name: task.name
+        name: task.name,
+        updatedAt: Date.now(),
       });
     } catch (e: any) {
       throw new Error(e.message);
