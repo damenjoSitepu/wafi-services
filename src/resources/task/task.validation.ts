@@ -12,4 +12,9 @@ export namespace taskValidation {
     secondId: Joi.string().required(),
     secondOrder: Joi.number().required(),
   })
+
+  export const update = Joi.object({
+    id: Joi.string().required(),
+    name: Joi.string().required(),
+  });
 }

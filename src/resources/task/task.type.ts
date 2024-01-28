@@ -8,7 +8,7 @@ export namespace task {
   };
 
   export type Request = {
-    name: string;
-    order: number;
+    name?: string;
+    order?: number;
   };
 };

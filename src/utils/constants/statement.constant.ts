@@ -30,5 +30,7 @@ export namespace statement {
     FAIL_SWAP: "Fail when swap your task order!",
     SHOW: "Successfully finding your task!",
     FAIL_SHOW: "Fail when find your task!",
+    UPDATE: "Successfully updating your task!",
+    FAIL_UPDATE: "Fail when updating your task!",
   };
 }

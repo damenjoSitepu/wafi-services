@@ -184,6 +184,39 @@ class TaskController implements ControllerContract {
   }
 
   /**
+   * Update Task API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _update = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+    try {
+      session.startTransaction();
+      await this._taskService.update(req.user, req.body.id, {
+        name: req.body.name
+      });
+      await session.commitTransaction();
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.TASK.UPDATE,
+      });
+    } catch (e: any) {
+      await session.abortTransaction();
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_UPDATE,
+      });
+    } finally {
+      session.endSession();
+    }
+  }
+
+  /**
    * Initialize Routes
    */
   private _initializeRoutes(): void {
@@ -217,7 +250,14 @@ class TaskController implements ControllerContract {
       authMiddleware,
       validationMiddleware(taskValidation.swap),
       this._swap
-    )
+    );
+
+    this.router.put(
+      `${this.path}`,
+      authMiddleware,
+      validationMiddleware(taskValidation.update),
+      this._update
+    );
   }
 }
 

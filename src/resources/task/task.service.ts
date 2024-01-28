@@ -168,6 +168,26 @@ class TaskService {
       throw new Error(e.message);
     }
   }
+
+  /**
+   * Update Task
+   * 
+   * @param {user.Data} user 
+   * @param {string} id 
+   * @param {task.Request} task 
+   */
+  public async update(user: user.Data, id: string , task: task.Request): Promise<void> {
+    try {
+      await this._taskModel.updateOne({
+        uid: user.uid,
+        _id: new mongoose.mongo.ObjectId(id)
+      }, {
+        name: task.name
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 }
 
 export default TaskService;
