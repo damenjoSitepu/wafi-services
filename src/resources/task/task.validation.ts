@@ -2,8 +2,9 @@ import Joi from "joi";
 
 export namespace taskValidation {
   export const create = Joi.object({
-    name: Joi.string().required().max(255),
-    order: Joi.number().required(),
+    name: Joi.string().required().max(255).messages({
+      "string.empty": "Please fill the name of your task!",
+    }),
   }); 
 
   export const swap = Joi.object({
@@ -15,6 +16,8 @@ export namespace taskValidation {
 
   export const update = Joi.object({
     id: Joi.string().required(),
-    name: Joi.string().required().max(255),
+    name: Joi.string().required().max(255).messages({
+      "string.empty": "Please fill the name of your task!",
+    }),
   });
 }
