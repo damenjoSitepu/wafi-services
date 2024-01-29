@@ -46,7 +46,7 @@ class TaskController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? "")) as task.Data[];
+      const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? ""), Number(req.query.page ?? 1)) as task.Data[];
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.GET,
         data: {
@@ -200,7 +200,9 @@ class TaskController implements ControllerContract {
     try {
       session.startTransaction();
       await this._taskService.update(req.user, req.body.id, {
-        name: req.body.name
+        name: req.body.name,
+        assignedAt: req.body.assignedAt,
+        isComplete: req.body.isComplete,
       });
       await session.commitTransaction();
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({

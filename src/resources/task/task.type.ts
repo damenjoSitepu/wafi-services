@@ -4,11 +4,15 @@ export namespace task {
     uid: string;
     name: string;
     order: number;
+    isComplete: boolean;
+    assignedAt: number;
     createdAt: string;
   };
 
   export type Request = {
     name?: string;
     order?: number;
+    isComplete?: boolean;
+    assignedAt?: number;
   };
 };

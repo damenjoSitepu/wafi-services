@@ -17,7 +17,7 @@ class TaskService {
    * 
    * @returns {Promise<any>}
    */
-  public async get(user: user.Data, q: string ): Promise<any> {
+  public async get(user: user.Data, q: string, page: number = 1): Promise<any> {
     try {
       const query: any = {
         uid: user.uid,
@@ -27,9 +27,16 @@ class TaskService {
         query["name"] = { $regex: q, $options: "i" };
       }
 
+      let skippedDocs: number = 0;
+      if (page > 1) {
+        skippedDocs = (page - 1) * Number(process.env.PAGINATION_PER_PAGE);
+      }
+
       return await this._taskModel.find(query).sort({
-        order: 1
-      }).limit(25);
+        order: -1
+      })
+        .skip(skippedDocs)
+        .limit(Number(process.env.PAGINATION_PER_PAGE));
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -118,12 +125,14 @@ class TaskService {
       }
 
       await this._taskModel.create([{
-          uid: user.uid,
-          name: task.name,
-          order: Number(dashboard.value),
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        }], { session });
+        uid: user.uid,
+        name: task.name,
+        isComplete: task.isComplete,
+        assignedAt: task.assignedAt,
+        order: Number(dashboard.value),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }], { session });
     } catch (e: any) {
       throw new Error(e.message);
     } 
@@ -176,13 +185,15 @@ class TaskService {
    * @param {string} id 
    * @param {task.Request} task 
    */
-  public async update(user: user.Data, id: string , task: task.Request): Promise<void> {
+  public async update(user: user.Data, id: string, task: task.Request): Promise<void> {
     try {
       await this._taskModel.updateOne({
         uid: user.uid,
         _id: new mongoose.mongo.ObjectId(id)
       }, {
         name: task.name,
+        assignedAt: task.assignedAt,
+        isComplete: task.isComplete,
         updatedAt: Date.now(),
       });
     } catch (e: any) {
