@@ -6,7 +6,6 @@ import LoginController from "@/resources/auth/login/login.controller";
 import AuthController from "@/resources/auth/auth.controller";
 import StatusController from "@/resources/status/status.controller";
 import MicrosoftTeamsIntegrationController from "@/resources/microsoft-teams-integration/microsoft-teams-integration.controller";
-import DailyStandUpAndEodReportController from "@/resources/daily-stand-up-and-eod-report/daily-stand-up-and-eod-report.controller";
 
 const PORT: number = Number(process.env.PORT) || 8080;
 const API_VERSION: string = process.env.API_VERSION || "";
@@ -21,7 +20,6 @@ try {
       new AuthController(),
       new StatusController(),
       new MicrosoftTeamsIntegrationController(),
-      new DailyStandUpAndEodReportController(),
     ]
   )).listen();
 } catch (e: any) {
