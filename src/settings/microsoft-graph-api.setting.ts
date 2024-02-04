@@ -1,8 +1,7 @@
-import { ClientSecretCredential, DeviceCodeCredential, DeviceCodeInfo, DeviceCodePromptCallback, TokenCredential } from '@azure/identity';
-import { Message } from '@microsoft/microsoft-graph-types';
+import { DeviceCodeCredential, DeviceCodePromptCallback } from '@azure/identity';
 import { AppSettings } from '@/utils/contracts/microsoft-graph-api.contract';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
-import { Client, GraphRequest } from '@microsoft/microsoft-graph-client';
+import { Client } from '@microsoft/microsoft-graph-client';
 import { MicrosoftTeamsIntegrationsModel } from '@/resources/microsoft-teams-integration/microsoft-teams-integration.model';
 
 class MicrosoftGraphApiSetting {
@@ -62,28 +61,6 @@ class MicrosoftGraphApiSetting {
   }
 
   /**
-   * Get User Token
-   * 
-   * @returns {Promise<string>}
-   */
-  private async _getUserToken(): Promise<string> {
-    try {
-      if (!this._deviceCodeCredential) {
-        throw new Error("Graph has not been initialized for user auth");
-      }
-
-      if (!this._appSettings.graphUserScopes) {
-        throw new Error('Setting "scopes" cannot be undefined');
-      }
-
-      const response = await this._deviceCodeCredential.getToken(this._appSettings.graphUserScopes);
-      return response.token;
-    } catch (e: any) {
-      throw new Error(e.message);
-    }
-  }
-
-  /**
    * Initialize Graph For User Auth
    * 
    * @param {DeviceCodePromptCallback} deviceCodePrompt 
@@ -119,31 +96,6 @@ class MicrosoftGraphApiSetting {
       
       this._userClient = Client.initWithMiddleware({ authProvider });
     } catch (e: any) {}
-  }
-
-  /**
-   * Greet User
-   * 
-   * @returns {Promise<void>}
-   */
-  public async greetUser(): Promise<GraphRequest | void> {
-    try {
-      if (!this._userClient) {
-        throw new Error('Graph has not been initialized for user auth');
-      }
-
-      // const user = await this._userClient.api("/me").select(["displayName", "mail", "userPrincipalName"]).get();
-      // POST /chats/{chat-id}/messages
-      const chatMessage = {
-        body: {
-          content: 'Hello World'
-        }
-      };
-      
-      // return await this._userClient.api("/chats/19:bdc61606-2b67-42d1-955b-a728bd455992_d1b22b2f-fc51-4fa3-9a3e-0d36b7179a7c@unq.gbl.spaces/messages").post(chatMessage);
-    } catch (e: any) {
-      throw new Error(e.message);
-    }
   }
 
   /**
