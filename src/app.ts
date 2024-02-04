@@ -5,6 +5,7 @@ import cors from "cors";
 import ControllerContract from "@/utils/contracts/controller.contract";
 import compression from "compression";
 import FirebaseService from "@/utils/services/firebase.service";
+import CloudinaryService from "@/utils/services/cloudinary.service";
  
 class App {
   /**
@@ -39,6 +40,7 @@ class App {
     this._application = express();
     this._enableConfig();
     this._initializeFirebase();
+    this._initializeCloudinary();
     this._initializeDatabase();
     this._initializeMiddleware();
     this._initializeControllers(controllers);
@@ -86,6 +88,19 @@ class App {
       FirebaseService.getInstance().setFirebaseApp();
       FirebaseService.getInstance().setFirebaseAuth();
       FirebaseService.getInstance().setFirebaseAdmin();
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Initialize Cloudinary
+   * 
+   * @returns {void}
+   */
+  private _initializeCloudinary(): void {
+    try {
+      CloudinaryService.getInstance().setCloudinary();
     } catch (e: any) {
       throw new Error(e.message);
     }

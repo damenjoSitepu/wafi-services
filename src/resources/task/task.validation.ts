@@ -11,6 +11,7 @@ export namespace taskValidation {
     assignedAt: Joi.number().required().messages({
       "any.required": "Please fill the assigned at field.",
     }),
+    microsoftIntegration: Joi.any(),
   }); 
 
   export const swap = Joi.object({

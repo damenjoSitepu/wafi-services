@@ -1,3 +1,5 @@
+import { microsoftTeamsIntegration as originalMicrosoftTeamsIntegration } from "@/resources/microsoft-teams-integration/microsoft-teams-integration.type";
+
 export namespace task {
   export type Data = {
     _id: string;
@@ -14,5 +16,14 @@ export namespace task {
     order?: number;
     isComplete?: boolean;
     assignedAt?: number;
+    microsoftIntegration?: task.microsoftIntegration.SendChatRequest;
   };
+
+  export namespace microsoftIntegration {
+    export type SendChatRequest = {
+      agreementConfirmation: boolean;
+      templateMessage: string;
+      selectedChat: originalMicrosoftTeamsIntegration.Chat | undefined;
+    };
+  }
 };
