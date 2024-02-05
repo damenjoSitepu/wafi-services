@@ -160,7 +160,7 @@ class MicrosoftTeamsIntegrationController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      await this._microsoftTeamsIntegrationService.removeToken(req.user.uid);
+      await this._microsoftTeamsIntegrationService.forceRemoveToken(req.user.uid);
       
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.MICROSOFT_TEAMS_INTEGRATION.DISCONNECT,

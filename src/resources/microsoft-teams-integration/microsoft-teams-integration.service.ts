@@ -104,10 +104,8 @@ class MicrosoftTeamsIntegrationService {
         },
       });
 
-      if (!response.ok) {
-        await this.removeToken(user.uid);
-        throw new Error(statement.MICROSOFT_TEAMS_INTEGRATION.INVALID_TOKEN);
-      }
+      await this.removeToken(user.uid, response);
+
       return await response.json() as microsoftTeamsIntegration.Chat[];
     } catch (e: any) {
       throw new Error(e.message);
@@ -141,17 +139,15 @@ class MicrosoftTeamsIntegrationService {
           headers: {
             "Authorization": `Bearer ${microsoftTeamsIntegration?.accessToken}`,
             "Content-Type": "application/json"
-          }, 
+          },
           body: JSON.stringify({
             body: {
               content
             }
           })
-        })
+        });
 
-        if (!response.ok) {
-          throw new Error(statement.MICROSOFT_TEAMS_INTEGRATION.INVALID_TOKEN);
-        }
+        await this.removeToken(user.uid, response);
       }
     } catch (e: any) {
       throw new Error(e.message);
@@ -180,10 +176,8 @@ class MicrosoftTeamsIntegrationService {
           "Authorization": `Bearer ${microsoftTeamsIntegration?.accessToken}`,
         },
       });
-      if (!response.ok) {
-        await this.removeToken(user.uid);
-        throw new Error(statement.MICROSOFT_TEAMS_INTEGRATION.INVALID_TOKEN);
-      }
+
+      await this.removeToken(user.uid, response);
 
       return await response.json() as microsoftTeamsIntegration.UserMetaData;
     } catch (e: any) {
@@ -192,12 +186,12 @@ class MicrosoftTeamsIntegrationService {
   }
 
   /**
-   * Remove Token
+   * Force Remove Token
    * 
-   * @param {string} uid
-   * @returns {Promise<void>} 
+   * @param {string} uid 
+   * @returns {Promise<void>}
    */
-  public async removeToken(uid: string): Promise<void> {
+  public async forceRemoveToken(uid: string): Promise<void> {
     try {
       await this._microsoftTeamsIntegrationModel.updateOne({
         uid,
@@ -206,6 +200,34 @@ class MicrosoftTeamsIntegrationService {
         accessTokenExpiresOn: 0,
         updatedAt: Date.now(),
       });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Remove Token
+   * 
+   * @param {globalThis.Response} response
+   * @param {string} uid
+   * @returns {Promise<void>} 
+   */
+  public async removeToken(uid: string, response?: globalThis.Response): Promise<void> {
+    try {
+      if (response && !response.ok) {
+        const error = await response.json();
+        // If invalid token comes from microsoft teams authentication, please remove the token we have
+        if (error.error.code === 'InvalidAuthenticationToken') {
+          await this._microsoftTeamsIntegrationModel.updateOne({
+            uid,
+          }, {
+            accessToken: "",
+            accessTokenExpiresOn: 0,
+            updatedAt: Date.now(),
+          });
+          throw new Error(statement.MICROSOFT_TEAMS_INTEGRATION.INVALID_TOKEN);
+        }
+      } 
     } catch (e: any) {
       throw new Error(e.message);
     }
