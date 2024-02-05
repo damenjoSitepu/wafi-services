@@ -62,6 +62,32 @@ class TaskController implements ControllerContract {
   }
 
   /**
+   * Send Task To Microsoft Teams Chat
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _sendToMicrosoftTeams = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      await new MicrosoftTeamsIntegrationService().sendTaskViaChat(req.body, req.user);
+
+      return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
+        statement: statement.TASK.SEND_TO_MICROSOFT_TEAMS,
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_SEND_TO_MICROSOFT_TEAMS,
+      });
+    }
+  }
+
+  /**
    * Store Task API
    * 
    * @param {Request} req 
@@ -235,6 +261,13 @@ class TaskController implements ControllerContract {
       authMiddleware,
       validationMiddleware(taskValidation.create),
       this._store
+    );
+
+    this.router.post(
+      `${this.path}/send/microsoft-teams`,
+      authMiddleware,
+      validationMiddleware(taskValidation.sendTaskToMicrosoftTeams),
+      this._sendToMicrosoftTeams,
     );
 
     this.router.get(

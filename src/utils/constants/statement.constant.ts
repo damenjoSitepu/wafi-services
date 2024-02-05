@@ -32,6 +32,8 @@ export namespace statement {
     FAIL_SHOW: "Fail when find your task.",
     UPDATE: "Successfully updating your task.",
     FAIL_UPDATE: "Fail when updating your task.",
+    SEND_TO_MICROSOFT_TEAMS: "Successfully send your task to microsoft teams.",
+    FAIL_SEND_TO_MICROSOFT_TEAMS: "Fail when send your task to microsoft teams.",
   };
 
   export const STATUS = {

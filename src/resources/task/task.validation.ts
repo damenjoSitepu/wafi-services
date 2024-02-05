@@ -33,4 +33,11 @@ export namespace taskValidation {
       "any.required": "Please fill the assigned at field.",
     }),
   });
+
+  export const sendTaskToMicrosoftTeams = Joi.object({
+    microsoftIntegration: Joi.any(),
+    name: Joi.string().required().max(255).messages({
+      "string.empty": "Please fill the name of your task",
+    }),
+  });
 }
