@@ -2,12 +2,14 @@ import { user } from "@/resources/user/user.type";
 import mongoose from "mongoose";
 import { StatusModel } from "@/resources/status/status.model";
 import { status } from "@/resources/status/status.type";
+import { DashboardModel } from "@/resources/dashboard/dashboard.model";
 
 class StatusService {
   /**
    * Model
    */
   private _statusModel = StatusModel;
+  private _dashboardModel = DashboardModel;
 
   /**
    * Get Status
@@ -89,6 +91,39 @@ class StatusService {
    */ 
   public async store(user: user.Data, status: status.Request, session: mongoose.mongo.ClientSession): Promise<void> {  
     try {
+      const countStatus: number = await this._statusModel.countDocuments({
+        uid: user.uid,
+      });
+
+      const currentDashboard = await this._dashboardModel.findOne({
+        uid: user.uid,
+        type: "Status",
+        key: "Count",
+      });
+
+      if (currentDashboard) {
+        await this._dashboardModel.updateOne({
+          uid: user.uid,
+          type: "Status",
+          key: "Count",
+        }, {
+          value: countStatus + 1,
+          updatedAt: Date.now(),
+        }, {
+          session
+        });
+      } else {
+        await this._dashboardModel.create([{
+          uid: user.uid,
+          type: "Status",
+          key: "Count",
+          title: "Count Item",
+          value: countStatus + 1,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        }], { session });
+      }
+
       await this._statusModel.create([{
         uid: user.uid,
         name: status.name,
@@ -106,9 +141,33 @@ class StatusService {
    * Destroy The Status
    * @param {user.Data} user 
    * @param {string} id 
+   * @param {mongoose.mongo.ClientSession} session
    */
-  public async destroy(user: user.Data, id: any): Promise<void> {
+  public async destroy(user: user.Data, id: any, session: mongoose.mongo.ClientSession): Promise<void> {
     try {
+      const currentDashboard = await this._dashboardModel.findOne({
+        uid: user.uid,
+        type: "Status",
+        key: "Count",
+      });
+
+      if (currentDashboard) {
+        const countStatus: number = await this._statusModel.countDocuments({
+          uid: user.uid,
+        });
+        
+        await this._dashboardModel.updateOne({
+          uid: user.uid,
+          type: "Status",
+          key: "Count",
+        }, {
+          value: !countStatus || countStatus === 0 ? 0 : countStatus - 1,
+          updatedAt: Date.now(),
+        }, {
+          session
+        });
+      }
+      
       await this._statusModel.deleteOne({
         $and: [
           {

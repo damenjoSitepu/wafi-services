@@ -106,14 +106,19 @@ class StatusController implements ControllerContract {
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+    
     try {
       const id = new mongoose.mongo.ObjectId(String(req.query.id));
-      await this._statusService.destroy(req.user, id);
+      session.startTransaction();
+      await this._statusService.destroy(req.user, id, session);
+      await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.STATUS.DESTROY,
       });
     } catch (e: any) {
+      await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
         statement: statement.STATUS.FAIL_DESTROY,
       });
