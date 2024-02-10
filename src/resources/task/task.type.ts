@@ -6,7 +6,11 @@ export namespace task {
     uid: string;
     name: string;
     order: number;
-    isComplete: boolean;
+    status: {
+      _id: string;
+      name: string;
+      color: string;
+    };
     assignedAt: number;
     createdAt: string;
   };
@@ -14,7 +18,7 @@ export namespace task {
   export type Request = {
     name?: string;
     order?: number;
-    isComplete?: boolean;
+    status?: string;
     assignedAt?: number;
     microsoftIntegration?: task.microsoftIntegration.SendChatRequest;
   };

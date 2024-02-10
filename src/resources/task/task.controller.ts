@@ -236,7 +236,7 @@ class TaskController implements ControllerContract {
       await this._taskService.update(req.user, req.body.id, {
         name: req.body.name,
         assignedAt: req.body.assignedAt,
-        isComplete: req.body.isComplete,
+        status: req.body.status
       });
       await session.commitTransaction();
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({

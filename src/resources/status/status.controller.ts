@@ -33,6 +33,34 @@ class StatusController implements ControllerContract {
   }
 
   /**
+   * Get Statuses (Minified)
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _getMinified = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const statuses: status.MinifiedData[] = await this._statusService.getMinified(req.user) as status.MinifiedData[];
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.STATUS.GET,
+        data: {
+          statuses
+        },
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.STATUS.FAIL_GET,
+      });
+    }
+  }
+
+  /**
    * Get Statuses
    * 
    * @param {Request} req 
@@ -120,7 +148,7 @@ class StatusController implements ControllerContract {
     } catch (e: any) {
       await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
-        statement: statement.STATUS.FAIL_DESTROY,
+        statement: e.message,
       });
     }
   }
@@ -235,15 +263,21 @@ class StatusController implements ControllerContract {
     );
 
     this.router.get(
-      `${this.path}/:id`,
-      authMiddleware,
-      this._show
-    );
-
-    this.router.get(
       `${this.path}`,
       authMiddleware,
       this._get
+    );
+
+    this.router.get(
+      `${this.path}/minified`,
+      authMiddleware,
+      this._getMinified
+    );
+
+    this.router.get(
+      `${this.path}/:id`,
+      authMiddleware,
+      this._show
     );
 
     this.router.delete(

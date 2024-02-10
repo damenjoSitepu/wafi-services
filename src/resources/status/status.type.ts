@@ -8,6 +8,12 @@ export namespace status {
     createdAt: string;
   };
 
+  export type MinifiedData = {
+    _id: string;
+    name: string;
+    color: string;
+  }
+
   export type Request = {
     name?: string;
     description?: string;

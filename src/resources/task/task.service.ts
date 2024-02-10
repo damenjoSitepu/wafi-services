@@ -3,6 +3,7 @@ import { DashboardModel } from "@/resources/dashboard/dashboard.model"
 import { task } from "@/resources/task/task.type";
 import { user } from "@/resources/user/user.type";
 import mongoose from "mongoose";
+import { StatusModel } from "@/resources/status/status.model";
 
 class TaskService {
   /**
@@ -10,6 +11,7 @@ class TaskService {
    */
   private _taskModel = TaskModel;
   private _dashboardModel = DashboardModel;
+  private _statusModel = StatusModel;
 
 
   /**
@@ -124,15 +126,38 @@ class TaskService {
         await this._dashboardModel.create([dashboard], { session });
       }
 
-      await this._taskModel.create([{
+      let req: any = {
         uid: user.uid,
         name: task.name,
-        isComplete: task.isComplete,
         assignedAt: task.assignedAt,
         order: Number(dashboard.value),
         createdAt: Date.now(),
         updatedAt: Date.now(),
-      }], { session });
+      };
+
+      if (task.status) {
+        // Find Status Data
+        const status = await this._statusModel.findOne({
+          uid: user.uid,
+          _id: task.status,
+        }, {
+          _id: 1,
+          name: 1,
+          color: 1,
+        });
+        if (status) {
+          req = {
+            ...req,
+            status: {
+              _id: status?._id,
+              name: status?.name,
+              color: status?.color,
+            },
+          };
+        }
+      }
+
+      await this._taskModel.create([req], { session });
     } catch (e: any) {
       throw new Error(e.message);
     } 
@@ -187,14 +212,37 @@ class TaskService {
    */
   public async update(user: user.Data, id: string, task: task.Request): Promise<void> {
     try {
+      let req: any = {
+        name: task.name,
+        assignedAt: task.assignedAt,
+        updatedAt: Date.now(),
+      };
+
+      if (task.status) {
+        // Find Status Data
+        const status = await this._statusModel.findOne({
+          uid: user.uid,
+          _id: task.status,
+        }, {
+          _id: 1,
+          name: 1,
+          color: 1,
+        });
+        if (status) {
+          req = {
+            ...req,
+            "status._id": status._id,
+            "status.name": status.name,
+            "status.color": status.color,
+          };
+        }
+      }
+
       await this._taskModel.updateOne({
         uid: user.uid,
         _id: new mongoose.mongo.ObjectId(id)
       }, {
-        name: task.name,
-        assignedAt: task.assignedAt,
-        isComplete: task.isComplete,
-        updatedAt: Date.now(),
+        $set: { ...req }
       });
     } catch (e: any) {
       throw new Error(e.message);

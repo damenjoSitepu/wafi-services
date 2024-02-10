@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { StatusModel } from "@/resources/status/status.model";
 import { status } from "@/resources/status/status.type";
 import { DashboardModel } from "@/resources/dashboard/dashboard.model";
+import { TaskModel } from "@/resources/task/task.model";
+import { statement } from "@/utils/constants/statement.constant";
 
 class StatusService {
   /**
@@ -10,6 +12,28 @@ class StatusService {
    */
   private _statusModel = StatusModel;
   private _dashboardModel = DashboardModel;
+  private _taskModel = TaskModel;
+
+  /**
+   * Get Status (Minified)
+   * 
+   * @returns {Promise<any>}
+   */
+  public async getMinified(user: user.Data): Promise<any> {
+    try {
+      return await this._statusModel.find({
+        uid: user.uid
+      }, {
+        _id: 1,
+        name: 1,
+        color: 1,
+      }).sort({
+        order: -1
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 
   /**
    * Get Status
@@ -145,6 +169,13 @@ class StatusService {
    */
   public async destroy(user: user.Data, id: any, session: mongoose.mongo.ClientSession): Promise<void> {
     try {
+      const task = await this._taskModel.findOne({
+        "status._id": id,
+      });
+      if (task) {
+        throw new Error(statement.STATUS.FAIL_DESTROY_TASK_DETECTED);
+      }
+
       const currentDashboard = await this._dashboardModel.findOne({
         uid: user.uid,
         type: "Status",
@@ -155,7 +186,7 @@ class StatusService {
         const countStatus: number = await this._statusModel.countDocuments({
           uid: user.uid,
         });
-        
+
         await this._dashboardModel.updateOne({
           uid: user.uid,
           type: "Status",

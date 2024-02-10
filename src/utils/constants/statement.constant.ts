@@ -49,6 +49,7 @@ export namespace statement {
     FAIL_SHOW: "Fail when find your status.",
     UPDATE: "Successfully updating your status.",
     FAIL_UPDATE: "Fail when updating your status.",
+    FAIL_DESTROY_TASK_DETECTED: "Failed to delete this status because it is already in use in task creation",
   };
 
   export const MICROSOFT_TEAMS_INTEGRATION = {

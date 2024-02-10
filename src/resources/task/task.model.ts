@@ -9,10 +9,6 @@ const TaskSchema = new Schema({
     type: String,
     required: true,
   },
-  isComplete: {
-    type: Boolean,
-    required: true,
-  },
   assignedAt: {
     type: Number,
     required: true,
@@ -20,6 +16,11 @@ const TaskSchema = new Schema({
   order: {
     type: Number,
     required: true,
+  },
+  status: {
+    _id: { type: String },
+    name: { type: String },
+    color: { type: String },
   },
   createdAt: {
     type: Number,

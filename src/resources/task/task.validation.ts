@@ -5,13 +5,11 @@ export namespace taskValidation {
     name: Joi.string().required().max(255).messages({
       "string.empty": "Please fill the name of your task.",
     }),
-    isComplete: Joi.boolean().required().messages({
-      "any.required": "Please define is this task was completed or not.",
-    }),
     assignedAt: Joi.number().required().messages({
       "any.required": "Please fill the assigned at field.",
     }),
     microsoftIntegration: Joi.any(),
+    status: Joi.string().allow(""),
   }); 
 
   export const swap = Joi.object({
@@ -26,12 +24,10 @@ export namespace taskValidation {
     name: Joi.string().required().max(255).messages({
       "string.empty": "Please fill the name of your task",
     }),
-    isComplete: Joi.boolean().required().messages({
-      "any.required": "Please define is this task was completed or not.",
-    }),
     assignedAt: Joi.number().required().messages({
       "any.required": "Please fill the assigned at field.",
     }),
+    status: Joi.string().allow(""),
   });
 
   export const sendTaskToMicrosoftTeams = Joi.object({
