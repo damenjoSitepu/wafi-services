@@ -46,7 +46,6 @@ class TaskService {
         .skip(skippedDocs)
         .limit(Number(process.env.PAGINATION_PER_PAGE));
     } catch (e: any) {
-      console.log(e.message);
       throw new Error(e.message);
     }
   }
