@@ -4,6 +4,7 @@ import { task } from "@/resources/task/task.type";
 import { user } from "@/resources/user/user.type";
 import mongoose from "mongoose";
 import { StatusModel } from "@/resources/status/status.model";
+import { Request } from "express";
 
 class TaskService {
   /**
@@ -19,16 +20,21 @@ class TaskService {
    * 
    * @returns {Promise<any>}
    */
-  public async get(user: user.Data, q: string, page: number = 1): Promise<any> {
+  public async get(user: user.Data, q: string, page: number = 1, req: Request): Promise<any> {
     try {
       const query: any = {
         uid: user.uid,
       };
+      
 
-      if (q) {
+      if (q !== "") {
         query["name"] = { $regex: q, $options: "i" };
       }
 
+      if (req.query.statuses) {
+        query["status._id"] = { $in: JSON.parse(String(req.query.statuses)) };
+      }
+ 
       let skippedDocs: number = 0;
       if (page > 1) {
         skippedDocs = (page - 1) * Number(process.env.PAGINATION_PER_PAGE);
@@ -40,6 +46,7 @@ class TaskService {
         .skip(skippedDocs)
         .limit(Number(process.env.PAGINATION_PER_PAGE));
     } catch (e: any) {
+      console.log(e.message);
       throw new Error(e.message);
     }
   }

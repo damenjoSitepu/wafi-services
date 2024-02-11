@@ -47,7 +47,7 @@ class TaskController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? ""), Number(req.query.page ?? 1)) as task.Data[];
+      const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? ""), Number(req.query.page ?? 1), req) as task.Data[];
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.GET,
         data: {
