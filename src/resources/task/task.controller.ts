@@ -258,46 +258,46 @@ class TaskController implements ControllerContract {
   private _initializeRoutes(): void {
     this.router.post(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(taskValidation.create),
       this._store
     );
 
     this.router.post(
       `${this.path}/send/microsoft-teams`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(taskValidation.sendTaskToMicrosoftTeams),
       this._sendToMicrosoftTeams,
     );
 
     this.router.get(
       `${this.path}/:id`,
-      authMiddleware,
+      authMiddleware.express,
       this._show
     );
 
     this.router.get(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       this._get
     );
 
     this.router.delete(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       this._destroy
     );
 
     this.router.post(
       `${this.path}/swap`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(taskValidation.swap),
       this._swap
     );
 
     this.router.put(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(taskValidation.update),
       this._update
     );

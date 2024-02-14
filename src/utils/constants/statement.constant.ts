@@ -74,4 +74,9 @@ export namespace statement {
     CHAT: "Successfully getting chats from teams integration.",
     FAIL_CHAT: "Fail when getting chats from teams integration.",
   };
+
+  export const SOCKET_IO = {
+    SUCCESS_CONNECT: "Successfully establish socket io connection.",
+    FAIL_CONNECT: "Fail to connect socket io connection.",
+  }
 }

@@ -5,7 +5,48 @@ import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import { user } from "@/resources/user/user.type";
 
-async function authMiddleware(
+/**
+ * SocketIO Auth Middleware
+ * 
+ * @param {any} socket 
+ * @param {any} next 
+ */
+async function socketIO(
+  socket: any,
+  next: any, 
+): Promise<void> {
+  try { 
+    const accessToken: string = socket.handshake.auth.accessToken;
+    if (!accessToken) {
+      return next(new Error(statement.SOCKET_IO.FAIL_CONNECT));
+    }
+
+    const decodedIdToken: DecodedIdToken = await FirebaseService.getInstance().getFirebaseAdmin().auth().verifyIdToken(accessToken);
+    if (!decodedIdToken) {
+      throw new Error();
+    }
+
+    const user: user.Data = {
+      uid: decodedIdToken.uid,
+      email: String(decodedIdToken.email),
+    };
+    socket.user = user;
+    
+    return next();
+  } catch (e: any) {
+    next(new Error(statement.SOCKET_IO.FAIL_CONNECT));
+  }
+}
+
+/**
+ * Express Auth Middleware
+ * 
+ * @param req E
+ * @param res 
+ * @param next 
+ * @returns 
+ */
+async function express(
   req: Request,
   res: Response,
   next: NextFunction
@@ -39,4 +80,4 @@ async function authMiddleware(
   }
 }
 
-export default authMiddleware;
+export default { express, socketIO };

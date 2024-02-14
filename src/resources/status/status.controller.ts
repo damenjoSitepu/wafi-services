@@ -257,32 +257,32 @@ class StatusController implements ControllerContract {
   private _initializeRoutes(): void {
     this.router.post(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(statusValidation.create),
       this._store
     );
 
     this.router.get(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       this._get
     );
 
     this.router.get(
       `${this.path}/minified`,
-      authMiddleware,
+      authMiddleware.express,
       this._getMinified
     );
 
     this.router.get(
       `${this.path}/:id`,
-      authMiddleware,
+      authMiddleware.express,
       this._show
     );
 
     this.router.delete(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       this._destroy
     );
 
@@ -295,7 +295,7 @@ class StatusController implements ControllerContract {
 
     this.router.put(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(statusValidation.update),
       this._update
     );

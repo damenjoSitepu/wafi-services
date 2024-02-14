@@ -10,7 +10,8 @@
       "@/utils/*": ["utils/*"],
       "@/resources/*": ["resources/*"],
       "@/middlewares/*": ["middlewares/*"],
-      "@/settings/*": ["settings/*"]
+      "@/settings/*": ["settings/*"],
+      "@/sockets/*": ["sockets/*"]
     },
     "resolveJsonModule": true
   },

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "module-alias/register";
 import App from "./app";
+import SocketIOApp from "@/sockets/app";
 import TaskController from "@/resources/task/task.controller";
 import LoginController from "@/resources/auth/login/login.controller";
 import AuthController from "@/resources/auth/auth.controller";
@@ -22,6 +23,8 @@ try {
       new MicrosoftTeamsIntegrationController(),
     ]
   )).listen();
+
+  (new SocketIOApp()).initializeApp();
 } catch (e: any) {
   console.log(e.message);
 }

@@ -207,32 +207,32 @@ class MicrosoftTeamsIntegrationController implements ControllerContract {
   private _initializeRoutes(): void {
     this.router.post(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       validationMiddleware(microsoftTeamsIntegrationValidation.create),
       this._store
     );
 
     this.router.post(
       `${this.path}/disconnect`,
-      authMiddleware,
+      authMiddleware.express,
       this._disconnect
     );
 
     this.router.get(
       `${this.path}/chats`,
-      authMiddleware,
+      authMiddleware.express,
       this._chats
     );
 
     this.router.get(
       `${this.path}`,
-      authMiddleware,
+      authMiddleware.express,
       this._show
     );
 
     this.router.get(
       `${this.path}/me`,
-      authMiddleware,
+      authMiddleware.express,
       this._me
     );
   }
