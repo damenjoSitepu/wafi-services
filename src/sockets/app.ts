@@ -1,4 +1,5 @@
 import authMiddleware from "@/middlewares/auth.middleware";
+import taskSocketHandler from "@/sockets/resources/task";
 const socketIo = require("socket.io")(process.env.SOCKET_IO_PORT, {
   cors: {
     origin: [process.env.SOCKET_IO_URL_ORIGIN],
@@ -15,9 +16,7 @@ class App {
     try {
       socketIo.use(authMiddleware.socketIO);
       socketIo.on("connection", (socket: any) => {
-        socket.on("createTask", () => {
-          socketIo.emit("retrieveTask", "Damenjo Sitepu");
-        });
+        (new taskSocketHandler(socketIo, socket));
       });
     } catch (e: any) {
       throw new Error(e.message);

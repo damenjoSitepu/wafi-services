@@ -98,7 +98,7 @@ class TaskService {
    * @param {task.Request} task 
    * @returns {Promise<void>}
    */
-  public async store(user: user.Data, task: task.Request, session: mongoose.mongo.ClientSession): Promise<void> {  
+  public async store(user: user.Data, task: task.Request, session: mongoose.mongo.ClientSession): Promise<any> {  
     try {
       let dashboard: any = {
         uid: user.uid,
@@ -163,7 +163,7 @@ class TaskService {
         }
       }
 
-      await this._taskModel.create([req], { session });
+      return await this._taskModel.create([req], { session });
     } catch (e: any) {
       throw new Error(e.message);
     } 

@@ -107,7 +107,7 @@ class TaskController implements ControllerContract {
       
       const request = req.body as task.Request;
 
-      await this._taskService.store(req.user, request, session);
+      const task: any = await this._taskService.store(req.user, request, session);
 
       await new MicrosoftTeamsIntegrationService().sendTaskViaChat(req.body, req.user);
 
@@ -115,6 +115,9 @@ class TaskController implements ControllerContract {
 
       return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
         statement: statement.TASK.CREATED,
+        data: {
+          _id: task[0]._id,
+        },
       });
     } catch (e: any) {
       await session.abortTransaction();
