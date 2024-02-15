@@ -116,7 +116,7 @@ class TaskController implements ControllerContract {
       return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
         statement: statement.TASK.CREATED,
         data: {
-          _id: task[0]._id,
+          task: task[0],
         },
       });
     } catch (e: any) {
@@ -241,9 +241,13 @@ class TaskController implements ControllerContract {
         assignedAt: req.body.assignedAt,
         status: req.body.status
       });
+      const task: any = await this._taskService.find(req.user, req.body.id);
       await session.commitTransaction();
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.UPDATE,
+        data: {
+          task,
+        },
       });
     } catch (e: any) {
       await session.abortTransaction();

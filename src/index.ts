@@ -7,6 +7,7 @@ import LoginController from "@/resources/auth/login/login.controller";
 import AuthController from "@/resources/auth/auth.controller";
 import StatusController from "@/resources/status/status.controller";
 import MicrosoftTeamsIntegrationController from "@/resources/microsoft-teams-integration/microsoft-teams-integration.controller";
+import Seeder from "@/seeders/seeder";
 
 const PORT: number = Number(process.env.PORT) || 8080;
 const API_VERSION: string = process.env.API_VERSION || "";
@@ -24,7 +25,8 @@ try {
     ]
   )).listen();
 
-  (new SocketIOApp()).initializeApp();
+  // Seeder Initialization (DONT DO THIS IN PRODUCTION)
+  // (new Seeder()).exec();
 } catch (e: any) {
   console.log(e.message);
 }

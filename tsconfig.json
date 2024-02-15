@@ -11,7 +11,8 @@
       "@/resources/*": ["resources/*"],
       "@/middlewares/*": ["middlewares/*"],
       "@/settings/*": ["settings/*"],
-      "@/sockets/*": ["sockets/*"]
+      "@/sockets/*": ["sockets/*"],
+      "@/seeders/*": ["seeders/*"]
     },
     "resolveJsonModule": true
   },

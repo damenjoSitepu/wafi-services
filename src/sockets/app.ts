@@ -1,8 +1,12 @@
 import authMiddleware from "@/middlewares/auth.middleware";
 import taskSocketHandler from "@/sockets/resources/task";
-const socketIo = require("socket.io")(process.env.SOCKET_IO_PORT, {
+
+const server = require("http").createServer();
+server.listen(process.env.SOCKET_IO_PORT);
+const socketIo = require("socket.io")(server, {
   cors: {
-    origin: [process.env.SOCKET_IO_URL_ORIGIN],
+    // origin: [process.env.SOCKET_IO_URL_ORIGIN],
+    origin: ["*"],
   },
 });
 
