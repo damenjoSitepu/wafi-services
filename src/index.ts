@@ -7,6 +7,7 @@ import LoginController from "@/resources/auth/login/login.controller";
 import AuthController from "@/resources/auth/auth.controller";
 import StatusController from "@/resources/status/status.controller";
 import MicrosoftTeamsIntegrationController from "@/resources/microsoft-teams-integration/microsoft-teams-integration.controller";
+import ActivityLogsController from "@/resources/activity-logs/activity-logs.controller";
 import Seeder from "@/seeders/seeder";
 
 const PORT: number = Number(process.env.PORT) || 8080;
@@ -22,7 +23,8 @@ try {
       new AuthController(),
       new StatusController(),
       new MicrosoftTeamsIntegrationController(),
-    ]
+      new ActivityLogsController(),
+    ],
   )).listen();
 
   // Seeder Initialization (DONT DO THIS IN PRODUCTION)

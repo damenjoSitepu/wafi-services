@@ -5,15 +5,25 @@ import { user } from "@/resources/user/user.type";
 import mongoose from "mongoose";
 import { StatusModel } from "@/resources/status/status.model";
 import { Request } from "express";
+import ActivityLogsService from "@/resources/activity-logs/activity-logs.service";
+import { UserModel } from "@/resources/user/user.model";
+import UtilService from "@/utils/services/util.service";
+import { timestamp } from "@/utils/constants/timestamp.constant";
 
 class TaskService {
+  /**
+   * Services
+   */
+  private _activityLogsService: ActivityLogsService = new ActivityLogsService();
+  private _utilService: UtilService = new UtilService();
+
   /**
    * Model
    */
   private _taskModel = TaskModel;
   private _dashboardModel = DashboardModel;
   private _statusModel = StatusModel;
-
+  private _userModel = UserModel;
 
   /**
    * Get Task
@@ -139,6 +149,7 @@ class TaskService {
         order: Number(dashboard.value),
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        modifiedBy: user.uid,
       };
 
       if (task.status) {
@@ -176,6 +187,8 @@ class TaskService {
    */
   public async destroy(user: user.Data, id: any): Promise<void> {
     try {
+      const task: any = await this._taskModel.findOne({ $and: [{ uid: user.uid }, { _id: id }] });
+
       await this._taskModel.deleteOne({
         $and: [
           {
@@ -186,6 +199,7 @@ class TaskService {
           }
         ]
       });
+      return task;
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -234,6 +248,7 @@ class TaskService {
           name: 1,
           color: 1,
         });
+
         if (status) {
           req = {
             ...req,
@@ -241,7 +256,14 @@ class TaskService {
             "status.name": status.name,
             "status.color": status.color,
           };
-        }
+        } 
+      } else {
+        req = {
+          ...req,
+          "status._id": "",
+          "status.name": "",
+          "status.color": "",
+        };
       }
 
       await this._taskModel.updateOne({
@@ -250,6 +272,83 @@ class TaskService {
       }, {
         $set: { ...req }
       });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Create Activity Logs
+   * 
+   * @param {task.Data} task 
+   * @param {user.Data} user 
+   * @param {user.Data} modifiedBeforeBy 
+   * @param {user.Data} modifiedAfterBy 
+   * @param {mongoose.mongo.ClientSession} session 
+   * @param {string} topic 
+   * @param {string} message 
+   */
+  public async createActivityLog(
+    task: task.Data,
+    user: user.Data,
+    modifiedBeforeBy: user.Data | undefined,
+    modifiedAfterBy: user.Data | undefined,
+    session: mongoose.mongo.ClientSession,
+    topic: string,
+    message: string,
+    oldTask?: task.Data,
+  ): Promise<void> {
+    try {
+      const users = await this._userModel.find({ uid: { $in: [modifiedBeforeBy?.uid, modifiedAfterBy?.uid] } });
+      if (users.length > 0) {
+        modifiedBeforeBy = [...users].find((user) => user.uid === modifiedBeforeBy?.uid);
+        modifiedAfterBy = [...users].find((user) => user.uid === modifiedAfterBy?.uid);
+      }
+
+      const payloads: Array<Array<{ key: string, value: any }>> = [[
+        ...this._utilService.convertJSONToArrayOfKeyAndValues({
+          "Id": task._id, 
+          "Name": task.name,
+          "Assigned At": task.assignedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.SHORT,
+          "Status": task?.status?.name,
+          "Created At": task.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+          "Updated At": task.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+        })
+      ]];
+
+      if (topic === "Update") {
+        payloads.push([
+          ...this._utilService.convertJSONToArrayOfKeyAndValues({
+            "Id": oldTask?._id,
+            "Name": oldTask?.name,
+            "Assigned At": oldTask?.assignedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.SHORT,
+            "Status": oldTask?.status?.name,
+            "Created At": oldTask?.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+            "Updated At": oldTask?.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+          })
+        ]);
+      }
+
+      await this._activityLogsService.create({
+        uid: user.uid,
+        type: "Task",
+        topic: topic,
+        message: message,
+        routeToView: `/task/${task._id}/update`,
+        payloads,
+        navigationWorkflow: ["/task","/task/create"],
+        createdAt: Date.now(),
+        modifiedBeforeBy: {
+          uid: modifiedBeforeBy?.uid || "",
+          name: modifiedBeforeBy?.name || "",
+          email: modifiedBeforeBy?.email || "",
+        },
+        modifiedAfterBy: {
+          uid: modifiedAfterBy?.uid || "",
+          name: modifiedAfterBy?.name || "",
+          email: modifiedAfterBy?.email || "",
+        }
+      }, session);
     } catch (e: any) {
       throw new Error(e.message);
     }

@@ -1,21 +1,15 @@
 import mongoose, { Schema } from "mongoose";
 
-interface Task extends Document {
+interface User extends Document {
   uid: string;
   name: string;
-  assignedAt: number;
-  order: number;
-  status: {
-    _id: string;
-    name: string;
-    color: string;
-  },
+  email: string;
   createdAt: number;
   updatedAt: number;
   modifiedBy: string;
 }
 
-const TaskSchema = new Schema<Task>({
+const UserSchema = new Schema<User>({
   uid: {
     type: String,
     required: true,
@@ -24,18 +18,9 @@ const TaskSchema = new Schema<Task>({
     type: String,
     required: true,
   },
-  assignedAt: {
-    type: Number,
+  email: {
+    type: String,
     required: true,
-  },
-  order: {
-    type: Number,
-    required: true,
-  },
-  status: {
-    _id: { type: String },
-    name: { type: String },
-    color: { type: String },
   },
   createdAt: {
     type: Number,
@@ -51,4 +36,4 @@ const TaskSchema = new Schema<Task>({
   },
 });
 
-export const TaskModel = mongoose.model<Task>("tasks", TaskSchema);
+export const UserModel = mongoose.model<User>("users", UserSchema);

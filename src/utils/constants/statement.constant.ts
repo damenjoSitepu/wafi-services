@@ -79,4 +79,11 @@ export namespace statement {
     SUCCESS_CONNECT: "Successfully establish socket io connection.",
     FAIL_CONNECT: "Fail to connect socket io connection.",
   }
+
+  export const ACTIVITY_LOGS = {
+    SUCCESS_GET: "Successfully getting your activity logs.",
+    FAIL_GET: "Fail when getting your activity logs.",
+    SUCCESS_SHOW: "Successfully find your activity log.",
+    FAIL_SHOW: "Fail when find your activity log.",
+  }
 }

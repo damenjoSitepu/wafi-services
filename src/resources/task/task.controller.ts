@@ -9,6 +9,7 @@ import authMiddleware from "@/middlewares/auth.middleware";
 import { task } from "./task.type";
 import mongoose from "mongoose";
 import MicrosoftTeamsIntegrationService from "@/resources/microsoft-teams-integration/microsoft-teams-integration.service";
+import ActivityLogsService from "@/resources/activity-logs/activity-logs.service";
 
 class TaskController implements ControllerContract {
   /**
@@ -25,6 +26,7 @@ class TaskController implements ControllerContract {
    * Define Services
    */
   private _taskService: TaskService = new TaskService();
+  private _activityLogsService: ActivityLogsService = new ActivityLogsService();
 
   /**
    * Initialize Data
@@ -109,6 +111,16 @@ class TaskController implements ControllerContract {
 
       const task: any = await this._taskService.store(req.user, request, session);
 
+      await this._taskService.createActivityLog(
+        task[0] as task.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Create",
+        `Successfully creating your task with name ${task[0].name}`
+      );
+
       await new MicrosoftTeamsIntegrationService().sendTaskViaChat(req.body, req.user);
 
       await session.commitTransaction();
@@ -142,14 +154,31 @@ class TaskController implements ControllerContract {
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+
     try {
+      session.startTransaction();
+
       const id = new mongoose.mongo.ObjectId(String(req.query.id));
-      await this._taskService.destroy(req.user, id);
+      const task: any = await this._taskService.destroy(req.user, id);
+
+      await this._taskService.createActivityLog(
+        task as task.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Delete",
+        `Successfully deleting your task with name ${task.name}`
+      );
+
+      await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.DESTROY,
       });
     } catch (e: any) {
+      await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
         statement: statement.TASK.FAIL_DESTROY,
       });
@@ -236,12 +265,25 @@ class TaskController implements ControllerContract {
 
     try {
       session.startTransaction();
+      const oldTask: any = await this._taskService.find(req.user, req.body.id);
       await this._taskService.update(req.user, req.body.id, {
         name: req.body.name,
         assignedAt: req.body.assignedAt,
         status: req.body.status
       });
       const task: any = await this._taskService.find(req.user, req.body.id);
+
+      await this._taskService.createActivityLog(
+        task as task.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Update",
+        `Successfully Updating your task with name ${task.name}`,
+        oldTask as task.Data,
+      );
+
       await session.commitTransaction();
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.UPDATE,

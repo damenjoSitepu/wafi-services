@@ -29,6 +29,7 @@ async function socketIO(
     const user: user.Data = {
       uid: decodedIdToken.uid,
       email: String(decodedIdToken.email),
+      name: "",
     };
     socket.user = user;
     
@@ -69,6 +70,7 @@ async function express(
     const user: user.Data = {
       uid: decodedIdToken.uid,
       email: String(decodedIdToken.email),
+      name: "",
     };
     req.user = user;
     

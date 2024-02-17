@@ -12,7 +12,9 @@ export namespace task {
       color: string;
     };
     assignedAt: number;
-    createdAt: string;
+    createdAt: number;
+    createdBy: string;
+    updatedAt: number;
   };
 
   export type Request = {
