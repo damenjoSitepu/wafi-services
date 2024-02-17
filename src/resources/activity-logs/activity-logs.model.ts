@@ -2,11 +2,14 @@ import mongoose, { Document, Schema } from "mongoose";
 
 interface ActivityLogs extends Document {
   uid: string;
+  subjectId: string;
   type: string;
   topic: string;
   message: string;
   routeToView: string;
   payloads: Array<Array<{ key: string; value: any }>>;
+  prevLink: string;
+  nextLink: string;
   navigationWorkflow: string[];
   createdAt: number;
   modifiedBeforeBy: {
@@ -23,6 +26,10 @@ interface ActivityLogs extends Document {
 
 const ActivityLogsSchema = new Schema<ActivityLogs>({
   uid: {
+    type: String,
+    required: true,
+  },
+  subjectId: {
     type: String,
     required: true,
   },
@@ -45,6 +52,12 @@ const ActivityLogsSchema = new Schema<ActivityLogs>({
   payloads: {
     type: [[{ key: String, value: Schema.Types.Mixed }]],
     required: true,
+  },
+  prevLink: {
+    type: String,
+  },
+  nextLink: {
+    type: String,
   },
   navigationWorkflow: {
     type: [String],

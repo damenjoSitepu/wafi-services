@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { StatusModel } from "@/resources/status/status.model";
 import { Request } from "express";
 import ActivityLogsService from "@/resources/activity-logs/activity-logs.service";
+import { ActivityLogsModel } from "@/resources/activity-logs/activity-logs.model";
 import { UserModel } from "@/resources/user/user.model";
 import UtilService from "@/utils/services/util.service";
 import { timestamp } from "@/utils/constants/timestamp.constant";
@@ -24,6 +25,7 @@ class TaskService {
   private _dashboardModel = DashboardModel;
   private _statusModel = StatusModel;
   private _userModel = UserModel;
+  private _activityLogsModel = ActivityLogsModel;
 
   /**
    * Get Task
@@ -316,6 +318,10 @@ class TaskService {
         })
       ]];
 
+      let prevLink: string = "";
+      let nextLink: string = "";
+      let prevActivityLog: any = undefined;
+
       if (topic === "Update") {
         payloads.push([
           ...this._utilService.convertJSONToArrayOfKeyAndValues({
@@ -329,13 +335,25 @@ class TaskService {
         ]);
       }
 
-      await this._activityLogsService.create({
+      if (["Update", "Delete"].includes(topic)) {
+        prevActivityLog = await this._activityLogsModel.findOne({
+          uid: user.uid,
+          subjectId: task._id,
+        }).sort({ createdAt: -1 });
+
+        prevLink = `/activity-logs/${prevActivityLog._id}/view`;
+      }
+
+      const activityLogs: any = await this._activityLogsService.create({
         uid: user.uid,
+        subjectId: task._id,
         type: "Task",
         topic: topic,
         message: message,
         routeToView: `/task/${task._id}/update`,
         payloads,
+        prevLink,
+        nextLink,
         navigationWorkflow: ["/task","/task/create"],
         createdAt: Date.now(),
         modifiedBeforeBy: {
@@ -349,6 +367,11 @@ class TaskService {
           email: modifiedAfterBy?.email || "",
         }
       }, session);
+
+      if (["Update","Delete"].includes(topic) && prevActivityLog) {
+        prevActivityLog.nextLink = `/activity-logs/${activityLogs[0]._id}/view`;
+        await prevActivityLog.save();
+      }      
     } catch (e: any) {
       throw new Error(e.message);
     }

@@ -1,11 +1,14 @@
 export namespace activityLogs {
   export type Request = {
     uid: string;
+    subjectId: string;
     type: string;
     topic: string;
     message: string;
     routeToView: string;
     payloads: Array<Array<{ key: string, value: any }>>;
+    prevLink?: string;
+    nextLink?: string;
     navigationWorkflow: string[];
     createdAt: number;
     modifiedBeforeBy: {
@@ -22,11 +25,14 @@ export namespace activityLogs {
 
   export type Data = {
     uid: string;
+    subjectId: string;
     type: string;
     topic: string;
     message: string;
     routeToView: string;
     payloads: Array<Array<{ key: string, value: any }>>;
+    prevLink: string;
+    nextLink: string;
     navigationWorkflow: string[];
     createdAt: number;
     modifiedBeforeBy: {

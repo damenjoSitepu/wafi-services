@@ -16,11 +16,11 @@ class ActivityLogsService {
    * 
    * @param {activityLogs.Request} request 
    * @param {mongoose.mongo.ClientSession} session 
-   * @returns {Promise<void>}
+   * @returns {Promise<any>}
    */
-  public async create(request: activityLogs.Request, session: mongoose.mongo.ClientSession): Promise<void> {
+  public async create(request: activityLogs.Request, session: mongoose.mongo.ClientSession): Promise<any> {
     try {
-      await this._activityLogsModel.create([request], { session });
+      return await this._activityLogsModel.create([request], { session });
     } catch (e: any) {}
   }
 
