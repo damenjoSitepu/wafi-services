@@ -3,6 +3,7 @@ import { activityLogs } from "@/resources/activity-logs/activity-logs.type";
 import mongoose from "mongoose";
 import { user } from "@/resources/user/user.type";
 import { UserModel } from "@/resources/user/user.model";
+import { Request } from "express";
 
 class ActivityLogsService {
   /**
@@ -27,14 +28,21 @@ class ActivityLogsService {
   /**
    * Get Activity Logs
    * 
+   * @param {user.Data} user
+   * @param {number} page
+   * @param {Request} req
    * @returns {Promise<any>}
    */
-  public async get(user: user.Data, page: number = 1): Promise<any> {
+  public async get(user: user.Data, page: number = 1, req: Request): Promise<any> {
     try {
       const query: any = {
         uid: user.uid,
       };
 
+      if (req.query.type) {
+        query["type"] = req.query.type ?? "";
+      }
+      
       let skippedDocs: number = 0;
       if (page > 1) {
         skippedDocs = (page - 1) * Number(process.env.PAGINATION_PER_PAGE);

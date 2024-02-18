@@ -42,7 +42,7 @@ class ActivityLogsController {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const activityLogs: activityLogs.Data[] = await this._activityLogsService.get(req.user, Number(req.query.page ?? 1));
+      const activityLogs: activityLogs.Data[] = await this._activityLogsService.get(req.user, Number(req.query.page ?? 1), req);
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.ACTIVITY_LOGS.SUCCESS_GET,
         data: {
