@@ -61,7 +61,8 @@ class ActivityLogsService {
           order: -1
         })
         .skip(skippedDocs)
-        .limit(Number(process.env.PAGINATION_PER_PAGE));
+        .limit(Number(process.env.PAGINATION_PER_PAGE))
+        .sort({ createdAt: -1 });
     } catch (e: any) {
       throw new Error(e.message);
     }
