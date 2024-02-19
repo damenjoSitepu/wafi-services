@@ -5,3 +5,4 @@ export namespace user {
     uid: string;
   };
 }
+

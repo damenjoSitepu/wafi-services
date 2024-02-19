@@ -86,4 +86,9 @@ export namespace statement {
     SUCCESS_SHOW: "Successfully find your activity log.",
     FAIL_SHOW: "Fail when find your activity log.",
   }
+
+  export const USER = {
+    SUCCESS_GET_PROFILE: "Successfully getting your profile.",
+    FAIL_GET_PROFILE: "Fail when getting your profile.",
+  }
 }
