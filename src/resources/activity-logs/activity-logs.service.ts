@@ -42,6 +42,14 @@ class ActivityLogsService {
       if (req.query.type) {
         query["type"] = req.query.type ?? "";
       }
+
+      if (req.query.startDate) {
+        query["createdAt"] = { $gte: Number(req.query.startDate) };
+      }
+
+      if (req.query.endDate) {
+        query["createdAt"] = { $lte: Number(req.query.endDate) };
+      }
       
       let skippedDocs: number = 0;
       if (page > 1) {
