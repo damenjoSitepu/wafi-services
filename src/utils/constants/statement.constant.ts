@@ -14,7 +14,7 @@ export namespace statement {
 
   export const AUTH = {
     SUCCESS_LOGIN: "Succesfully login.",
-    FAIL_LOGIN: "Fail to login. Please try again later.",
+    FAIL_LOGIN: "Invalid Email or Password. Please try again",
     FAIL_VERIFY_TOKEN: "Fail to verify token, or the token has been expired.",
     FAIL_ACCESSING_SOURCE: "Authentication for your credential was denied.",
   };
