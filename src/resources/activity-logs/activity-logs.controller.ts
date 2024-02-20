@@ -71,6 +71,7 @@ class ActivityLogsController {
   ): Promise<Response | void> => {
     try {
       const activityLog: activityLogs.Data | null = await this._activityLogsService.find(req.user, String(req.params["id"] ?? ""));
+      if (!activityLog) throw new Error();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.ACTIVITY_LOGS.SUCCESS_SHOW,

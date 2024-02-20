@@ -234,6 +234,7 @@ class TaskController implements ControllerContract {
   ): Promise<Response | void> => {
     try {
       const task: task.Data | null = await this._taskService.find(req.user, String(req.params["id"] ?? ""))
+      if (!task) throw new Error();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.SHOW,

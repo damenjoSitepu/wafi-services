@@ -201,7 +201,8 @@ class StatusController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const status: status.Data | null = await this._statusService.find(req.user, String(req.params["id"] ?? ""))
+      const status: status.Data | null = await this._statusService.find(req.user, String(req.params["id"] ?? ""));
+      if (!status) throw new Error();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.STATUS.SHOW,
