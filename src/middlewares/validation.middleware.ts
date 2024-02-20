@@ -2,6 +2,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import Joi from "joi";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
 import { statement } from "@/utils/constants/statement.constant";
+import sanitizeHtml from 'sanitize-html';
 
 function validationMiddleware(schema: Joi.Schema): RequestHandler {
   return async(
@@ -14,11 +15,22 @@ function validationMiddleware(schema: Joi.Schema): RequestHandler {
       allowUnknown: true,
       stripUnknown: true,
     };
+
     try {
+      for (let key in req.body) {
+        if (typeof req.body[key] === 'string') {
+          req.body[key] = sanitizeHtml(req.body[key], {
+            allowedTags: [],
+            allowedAttributes: {}
+          });
+        }
+      }
+
       const value = await schema.validateAsync(
         req.body,
         validationOptions
       );
+
       req.body = value;
       next();
     } catch (e: any) {
