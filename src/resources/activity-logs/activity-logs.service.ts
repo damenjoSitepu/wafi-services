@@ -1,4 +1,5 @@
 import { ActivityLogsModel } from "@/resources/activity-logs/activity-logs.model";
+import { ActivityLogsTimelineModel } from "@/resources/activity-logs/activity-logs-timeline.model";
 import { activityLogs } from "@/resources/activity-logs/activity-logs.type";
 import mongoose from "mongoose";
 import { user } from "@/resources/user/user.type";
@@ -10,7 +11,7 @@ class ActivityLogsService {
    * Models
    */
   private _activityLogsModel = ActivityLogsModel;
-  private _userModel = UserModel;
+  private _activityLogsTimeline = ActivityLogsTimelineModel
 
   /**
    * Create Activity Logs
@@ -21,7 +22,30 @@ class ActivityLogsService {
    */
   public async create(request: activityLogs.Request, session: mongoose.mongo.ClientSession): Promise<any> {
     try {
-      return await this._activityLogsModel.create([request], { session });
+      const activityLogs: any = await this._activityLogsModel.create([request], { session });
+
+      const activityLogsTimeline: any = await this._activityLogsTimeline.findOne({
+        uid: request.uid,
+        subjectId: request.subjectId,
+      });
+
+      if (activityLogsTimeline) {
+        await this._activityLogsTimeline.updateOne({
+          uid: request.uid,
+          subjectId: request.subjectId,
+        }, {
+          $push: { activityLogs: { _id: activityLogs[0]._id, message: activityLogs[0].message, createdAt: activityLogs[0].createdAt } },
+        });
+      } else {
+        await this._activityLogsTimeline.create([{
+          uid: request.uid,
+          subjectId: activityLogs[0].subjectId,
+          createdAt: Date.now(),
+          activityLogs: [{ _id: activityLogs[0]._id, message: activityLogs[0].message, createdAt: activityLogs[0].createdAt }],
+        }], { session }); 
+      }
+ 
+      return activityLogs;
     } catch (e: any) {}
   }
 
@@ -83,16 +107,34 @@ class ActivityLogsService {
    * @param {string} id 
    * @returns {Promise<activityLogs.Data | null>}
    */
-    public async find(user: user.Data, id: string): Promise<activityLogs.Data | null> {
-      try {
-        return await this._activityLogsModel.findOne({
-          uid: user.uid,
-          _id: new mongoose.mongo.ObjectId(id)
-        });
-      } catch (e: any) {
-        throw new Error(e.message);
-      }
+  public async find(user: user.Data, id: string): Promise<activityLogs.Data | null> {
+    try {
+      return await this._activityLogsModel.findOne({
+        uid: user.uid,
+        _id: new mongoose.mongo.ObjectId(id)
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
     }
+  }
+
+  /**
+   * Find Activity Logs Timeline Detail
+   * 
+   * @param {user.Data} user 
+   * @param {string} subjectId 
+   * @returns {Promise<activityLogs.TimelineData | null>}
+   */
+  public async findTimeline(user: user.Data, subjectId: string): Promise<activityLogs.TimelineData | null> {
+    try {
+      return await this._activityLogsTimeline.findOne({
+        uid: user.uid,
+        subjectId: subjectId,
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 }
 
 export default ActivityLogsService;

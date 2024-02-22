@@ -87,6 +87,36 @@ class ActivityLogsController {
   }
 
   /**
+   * Show Activity Log Timeline API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _showTimeline = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const activityLogsTimeline: activityLogs.TimelineData | null = await this._activityLogsService.findTimeline(req.user, String(req.params["subjectId"] ?? ""));
+      if (!activityLogsTimeline) throw new Error();
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.ACTIVITY_LOGS.SUCCESS_GET_TIMELINE,
+        data: {
+          activityLogsTimeline,
+        },
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.INTERNAL_SERVER_ERROR).json({
+        statement: statement.ACTIVITY_LOGS.FAIL_GET_TIMELINE,
+      });
+    } 
+  }
+
+  /**
    * Initialize Routes
    */
   private _initializeRoutes(): void {
@@ -101,6 +131,12 @@ class ActivityLogsController {
       authMiddleware.express,
       this._show
     );
+
+    this.router.get(
+      `${this.path}/:subjectId/timeline`,
+      authMiddleware.express,
+      this._showTimeline
+    )
   }
 }
 

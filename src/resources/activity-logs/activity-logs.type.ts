@@ -46,4 +46,11 @@ export namespace activityLogs {
       email: string;
     }
   };
+
+  export type TimelineData = {
+    uid: string;
+    subjectId: string;
+    createdAt: number;
+    activityLogs: { _id: string, message: string, createdAt: number }[]
+  };
 }
