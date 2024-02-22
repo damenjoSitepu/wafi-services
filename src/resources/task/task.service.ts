@@ -210,6 +210,31 @@ class TaskService {
   }
 
   /**
+   * Toggle Starred The Task
+   * 
+   * @param {user.Data} user 
+   * @param {string} id
+   * @param {boolean} isStarred
+   * @return {Promise<task.Data>}
+   */
+  public async toggleStarred(user: user.Data, id: any, isStarred: boolean): Promise<task.Data> {
+    try {
+      await this._taskModel.updateOne({
+        uid: user.uid,
+        _id: id
+      }, {
+        isStarred,
+      });
+
+      const task: any = await this._taskModel.findOne({ uid: user.uid, _id: id });
+
+      return task;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
    * Find Certain Task
    * 
    * @param {user.Data} user 
@@ -315,6 +340,7 @@ class TaskService {
           "Name": task.name,
           "Assigned At": task.assignedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.SHORT,
           "Status": task?.status?.name,
+          "Is Starred": task?.isStarred ? "Yes" : "No",
           "Created At": task.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
           "Updated At": task.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
         })
@@ -331,6 +357,7 @@ class TaskService {
             "Name": oldTask?.name,
             "Assigned At": oldTask?.assignedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.SHORT,
             "Status": oldTask?.status?.name,
+            "Is Starred": oldTask?.isStarred ? "Yes" : "No",
             "Created At": oldTask?.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
             "Updated At": oldTask?.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
           })

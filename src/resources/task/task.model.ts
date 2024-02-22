@@ -4,6 +4,7 @@ interface Task extends Document {
   uid: string;
   name: string;
   assignedAt: number;
+  isStarred: boolean;
   order: number;
   status: {
     _id: string;
@@ -27,6 +28,10 @@ const TaskSchema = new Schema<Task>({
   assignedAt: {
     type: Number,
     required: true,
+  },
+  isStarred: {
+    type: Boolean,
+    required: false,
   },
   order: {
     type: Number,

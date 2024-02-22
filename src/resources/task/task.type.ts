@@ -11,6 +11,7 @@ export namespace task {
       name: string;
       color: string;
     };
+    isStarred: boolean;
     assignedAt: number;
     createdAt: number;
     createdBy: string;

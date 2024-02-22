@@ -34,6 +34,8 @@ export namespace statement {
     FAIL_UPDATE: "Fail when updating your task.",
     SEND_TO_MICROSOFT_TEAMS: "Successfully send your task to microsoft teams.",
     FAIL_SEND_TO_MICROSOFT_TEAMS: "Fail when send your task to microsoft teams.",
+    SUCCESS_TOGGLE_STARRED: "Successfully toggle starred your task.",
+    FAIL_TOGGLE_STARRED: "Fail when toggle starred your task.",
   };
 
   export const STATUS = {

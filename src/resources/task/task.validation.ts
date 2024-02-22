@@ -36,4 +36,8 @@ export namespace taskValidation {
       "string.empty": "Please fill the name of your task",
     }),
   });
+
+  export const toggleStarred = Joi.object({
+    isStarred: Joi.boolean().required(),
+  });
 }

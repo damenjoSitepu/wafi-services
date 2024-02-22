@@ -306,6 +306,61 @@ class TaskController implements ControllerContract {
   }
 
   /**
+   * Toggle Starred Task API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _toggleStarred = async(
+    req: Request, 
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const id = new mongoose.mongo.ObjectId(String(req.params["id"] ?? ""));
+
+      const oldTask: any = await this._taskService.find(req.user, id.toString());
+
+      if (!oldTask) throw new Error();
+
+      const task: any = await this._taskService.toggleStarred(req.user, id, req.body.isStarred);
+
+      const message: string = `Successfully ${task.isStarred ? 'add to starred' : 'remove from starred'} task with name ${task.name}`;
+
+      await this._taskService.createActivityLog(
+        task as task.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Update",
+        message,
+        oldTask
+      );
+
+      await session.commitTransaction();
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: message,
+        data: {
+          task,
+        }
+      });
+    } catch (e: any) {
+      await session.abortTransaction();
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.TASK.FAIL_TOGGLE_STARRED,
+      });
+    }
+  }
+
+  /**
    * Initialize Routes
    */
   private _initializeRoutes(): void {
@@ -314,6 +369,13 @@ class TaskController implements ControllerContract {
       authMiddleware.express,
       validationMiddleware(taskValidation.create),
       this._store
+    );
+
+    this.router.put(
+      `${this.path}/:id/toggle-starred`,
+      authMiddleware.express,
+      validationMiddleware(taskValidation.toggleStarred),
+      this._toggleStarred
     );
 
     this.router.post(
