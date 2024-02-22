@@ -43,10 +43,13 @@ class ActivityLogsController {
   ): Promise<Response | void> => {
     try {
       const activityLogs: activityLogs.Data[] = await this._activityLogsService.get(req.user, Number(req.query.page ?? 1), req);
+      const countActivityLogs: number = await this._activityLogsService.getCount(req.user);
+
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.ACTIVITY_LOGS.SUCCESS_GET,
         data: {
           activityLogs,
+          totalActivityLogsCount: countActivityLogs,
         },
       });
     } catch (e: any) {

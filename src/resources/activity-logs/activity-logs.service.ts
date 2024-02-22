@@ -50,6 +50,20 @@ class ActivityLogsService {
   }
 
   /**
+   * Get Count Of Total Activity Logs
+   * 
+   * @param {user.Data} user 
+   * @returns {Promise<number>}
+   */
+  public async getCount(user: user.Data): Promise<number> {
+    try {
+      return await this._activityLogsModel.find({ uid: user.uid }).countDocuments();
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
    * Get Activity Logs
    * 
    * @param {user.Data} user
