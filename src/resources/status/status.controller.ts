@@ -105,7 +105,18 @@ class StatusController implements ControllerContract {
     
     try {
       session.startTransaction();
-      await this._statusService.store(req.user, req.body, session);
+      const status: any = await this._statusService.store(req.user, req.body, session);
+
+      await this._statusService.createActivityLog(
+        status[0] as status.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Create",
+        `Successfully creating your status with name ${status[0].name}`
+      );
+
       await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.CREATED).json({
@@ -139,7 +150,18 @@ class StatusController implements ControllerContract {
     try {
       const id = new mongoose.mongo.ObjectId(String(req.query.id));
       session.startTransaction();
-      await this._statusService.destroy(req.user, id, session);
+      const status: any = await this._statusService.destroy(req.user, id, session);
+
+      await this._statusService.createActivityLog(
+        status as status.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Delete",
+        `Successfully deleting your status with name ${status.name}`
+      );
+
       await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
@@ -233,11 +255,28 @@ class StatusController implements ControllerContract {
     const session: mongoose.mongo.ClientSession = await mongoose.startSession();
     try {
       session.startTransaction();
+      const oldStatus: any = await this._statusService.find(req.user, req.body.id);
+
+      if (!oldStatus) throw new Error();
+
       await this._statusService.update(req.user, req.body.id, {
         name: req.body.name,
         description: req.body.description,
         color: req.body.color,
       });
+      const status: any = await this._statusService.find(req.user, req.body.id);
+
+      await this._statusService.createActivityLog(
+        status as status.Data,
+        req.user,
+        req.user,
+        req.user,
+        session,
+        "Update",
+        `Successfully Updating your status with name ${status.name}`,
+        oldStatus as status.Data,
+      );
+
       await session.commitTransaction();
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.STATUS.UPDATE,

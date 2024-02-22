@@ -191,6 +191,8 @@ class TaskService {
     try {
       const task: any = await this._taskModel.findOne({ $and: [{ uid: user.uid }, { _id: id }] });
 
+      if (!task) throw new Error();
+
       await this._taskModel.deleteOne({
         $and: [
           {

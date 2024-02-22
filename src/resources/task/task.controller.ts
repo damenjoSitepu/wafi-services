@@ -267,6 +267,9 @@ class TaskController implements ControllerContract {
     try {
       session.startTransaction();
       const oldTask: any = await this._taskService.find(req.user, req.body.id);
+
+      if (!oldTask) throw new Error();
+
       await this._taskService.update(req.user, req.body.id, {
         name: req.body.name,
         assignedAt: req.body.assignedAt,

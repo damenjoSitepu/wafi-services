@@ -7,6 +7,7 @@ interface Status extends Document {
   color: string;
   createdAt: number;
   updatedAt: number;
+  modifiedBy: string;
 }
 
 const StatusSchema = new Schema<Status>({
@@ -32,6 +33,10 @@ const StatusSchema = new Schema<Status>({
   },
   updatedAt: {
     type: Number,
+    required: true,
+  },
+  modifiedBy: {
+    type: String,
     required: true,
   },
 });

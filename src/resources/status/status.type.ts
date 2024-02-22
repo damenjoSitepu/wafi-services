@@ -6,6 +6,8 @@ export namespace status {
     description: string;
     color: string;
     createdAt: string;
+    updatedAt: string;
+    modifiedBy: string;
   };
 
   export type MinifiedData = {

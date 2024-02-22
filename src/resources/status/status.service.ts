@@ -5,6 +5,11 @@ import { status } from "@/resources/status/status.type";
 import { DashboardModel } from "@/resources/dashboard/dashboard.model";
 import { TaskModel } from "@/resources/task/task.model";
 import { statement } from "@/utils/constants/statement.constant";
+import { UserModel } from "@/resources/user/user.model";
+import UtilService from "@/utils/services/util.service";
+import { timestamp } from "@/utils/constants/timestamp.constant";
+import { ActivityLogsModel } from "@/resources/activity-logs/activity-logs.model";
+import ActivityLogsService from "@/resources/activity-logs/activity-logs.service";
 
 class StatusService {
   /**
@@ -13,6 +18,14 @@ class StatusService {
   private _statusModel = StatusModel;
   private _dashboardModel = DashboardModel;
   private _taskModel = TaskModel;
+  private _userModel = UserModel;
+  private _activityLogsModel = ActivityLogsModel;
+
+  /**
+   * Services
+   */
+  private _utilService: UtilService = new UtilService();
+  private _activityLogsService: ActivityLogsService = new ActivityLogsService();
 
   /**
    * Get Status (Minified)
@@ -113,7 +126,7 @@ class StatusService {
    * @param {status.Request} status 
    * @returns {Promise<void>}
    */ 
-  public async store(user: user.Data, status: status.Request, session: mongoose.mongo.ClientSession): Promise<void> {  
+  public async store(user: user.Data, status: status.Request, session: mongoose.mongo.ClientSession): Promise<any> {  
     try {
       const countStatus: number = await this._statusModel.countDocuments({
         uid: user.uid,
@@ -148,13 +161,14 @@ class StatusService {
         }], { session });
       }
 
-      await this._statusModel.create([{
+      return await this._statusModel.create([{
         uid: user.uid,
         name: status.name,
         description: status.description,
         color: status.color,
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        modifiedBy: user.uid,
       }], { session });
     } catch (e: any) {
       throw new Error(e.message);
@@ -169,6 +183,10 @@ class StatusService {
    */
   public async destroy(user: user.Data, id: any, session: mongoose.mongo.ClientSession): Promise<void> {
     try {
+      const status: any = await this._statusModel.findOne({ $and: [{ uid: user.uid }, { _id: id }] });
+
+      if (!status) throw new Error();
+
       const task = await this._taskModel.findOne({
         "status._id": id,
       });
@@ -209,6 +227,8 @@ class StatusService {
           }
         ]
       });
+
+      return status;
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -250,6 +270,104 @@ class StatusService {
         color: status.color,
         updatedAt: Date.now(),
       });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Create Activity Logs
+   * 
+   * @param {status.Data} status 
+   * @param {user.Data} user 
+   * @param {user.Data} modifiedBeforeBy 
+   * @param {user.Data} modifiedAfterBy 
+   * @param {mongoose.mongo.ClientSession} session 
+   * @param {string} topic 
+   * @param {string} message 
+   */
+  public async createActivityLog(
+    status: status.Data,
+    user: user.Data,
+    modifiedBeforeBy: user.Data | undefined,
+    modifiedAfterBy: user.Data | undefined,
+    session: mongoose.mongo.ClientSession,
+    topic: string,
+    message: string,
+    oldStatus?: status.Data,
+  ): Promise<void> {
+    try {
+      const users = await this._userModel.find({ uid: { $in: [modifiedBeforeBy?.uid, modifiedAfterBy?.uid] } });
+      if (users.length > 0) {
+        modifiedBeforeBy = [...users].find((user) => user.uid === modifiedBeforeBy?.uid);
+        modifiedAfterBy = [...users].find((user) => user.uid === modifiedAfterBy?.uid);
+      }
+
+      const payloads: Array<Array<{ key: string, value: any }>> = [[
+        ...this._utilService.convertJSONToArrayOfKeyAndValues({
+          "Id": status._id, 
+          "Name": status.name,
+          "Description": status.description,
+          "Color": status.color,
+          "Created At": status.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+          "Updated At": status.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+        })
+      ]];
+
+      let prevLink: string = "";
+      let nextLink: string = "";
+      let prevActivityLog: any = undefined;
+
+      if (topic === "Update") {
+        payloads.push([
+          ...this._utilService.convertJSONToArrayOfKeyAndValues({
+            "Id": oldStatus?._id,
+            "Name": oldStatus?.name,
+            "Description": oldStatus?.description,
+            "Color": oldStatus?.color,
+            "Created At": oldStatus?.createdAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+            "Updated At": oldStatus?.updatedAt + timestamp.SEPARATOR.DEFAULT + timestamp.FORMAT.DEFAULT,
+          })
+        ]);
+      }
+
+      if (["Update", "Delete"].includes(topic)) {
+        prevActivityLog = await this._activityLogsModel.findOne({
+          uid: user.uid,
+          subjectId: status._id,
+        }).sort({ createdAt: -1 });
+
+        prevLink = `/activity-logs/${prevActivityLog._id}/view`;
+      }
+
+      const activityLogs: any = await this._activityLogsService.create({
+        uid: user.uid,
+        subjectId: status._id,
+        type: "Status",
+        topic: topic,
+        message: message,
+        routeToView: `/setting/status/${status._id}/update`,
+        payloads,
+        prevLink,
+        nextLink,
+        navigationWorkflow: ["/setting/status","/setting/status/create"],
+        createdAt: Date.now(),
+        modifiedBeforeBy: {
+          uid: modifiedBeforeBy?.uid || "",
+          name: modifiedBeforeBy?.name || "",
+          email: modifiedBeforeBy?.email || "",
+        },
+        modifiedAfterBy: {
+          uid: modifiedAfterBy?.uid || "",
+          name: modifiedAfterBy?.name || "",
+          email: modifiedAfterBy?.email || "",
+        }
+      }, session);
+
+      if (["Update","Delete"].includes(topic) && prevActivityLog) {
+        prevActivityLog.nextLink = `/activity-logs/${activityLogs[0]._id}/view`;
+        await prevActivityLog.save();
+      }      
     } catch (e: any) {
       throw new Error(e.message);
     }
