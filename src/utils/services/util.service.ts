@@ -56,7 +56,7 @@ class UtilService implements UtilServiceContract {
             result += ' '; 
         }
     }
-    return result;
+    return result.substring(0, result.length - 1);
   }
 
   /**
