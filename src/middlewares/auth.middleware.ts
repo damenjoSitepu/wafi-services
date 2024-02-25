@@ -4,6 +4,7 @@ import { httpResponseStatusCode } from "@/utils/constants/http-response-status-c
 import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import { user } from "@/resources/user/user.type";
+import { UserModel } from "@/resources/user/user.model";
 
 /**
  * SocketIO Auth Middleware
@@ -67,6 +68,10 @@ async function express(
       throw new Error();
     }
 
+    const userExist: any = await UserModel.findOne({ uid: decodedIdToken.uid });
+    if (!userExist) throw new Error(statement.AUTH.FAIL_ACCESSING_SOURCE);
+    if (!userExist.isActive) throw new Error(statement.AUTH.FAIL_ACCESSING_SOURCE_NOT_BETA_USER);
+
     const user: user.Data = {
       uid: decodedIdToken.uid,
       email: String(decodedIdToken.email),
@@ -77,7 +82,7 @@ async function express(
     return next();
   } catch (e: any) {
     return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
-      statement: statement.AUTH.FAIL_ACCESSING_SOURCE
+      statement: e.message,
     });
   }
 }
