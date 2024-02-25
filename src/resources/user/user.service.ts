@@ -11,13 +11,13 @@ class UserService {
    * Find Certain User
    * 
    * @param {user.Data} user 
-   * @returns {Promise<user.Data | null>}
+   * @returns {Promise<any>}
    */
-    public async find(user: user.Data): Promise<user.Data | null> {
+    public async find(user: user.Data): Promise<any> {
       try {
         return await this._userModel.findOne({
           uid: user.uid,
-        });
+        }).select({ email: 1, classifiedAs: 1, isActive: 1, name: 1, });
       } catch (e: any) {
         throw new Error(e.message);
       }

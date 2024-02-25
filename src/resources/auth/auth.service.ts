@@ -2,9 +2,28 @@ import AuthServiceContract from "@/resources/auth/auth-service.contract";
 import { statement } from "@/utils/constants/statement.constant";
 import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
-import { Auth, UserCredential, signInWithEmailAndPassword } from "firebase/auth";
+import { Auth, UserCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import UtilService from "@/utils/services/util.service";
+import { UserModel } from "@/resources/user/user.model";
+import MailService from "@/utils/services/mail.service";
+const { v4: uuidv4 } = require('uuid');
+import { user } from "@/resources/user/user.type";
+import { Request } from "express"; 
+import mongoose from "mongoose";
+import BcryptService from "@/utils/services/bcrypt.service";
 
 class AuthService implements AuthServiceContract {
+  /**
+   * Services
+   */
+  private _utilService: UtilService = new UtilService();
+  private _bcryptService: BcryptService = new BcryptService();
+
+  /**
+   * Models
+   */
+  private _userModel = UserModel;
+
   /**
    * Sign In With Email and Password
    * 
@@ -22,6 +41,177 @@ class AuthService implements AuthServiceContract {
       );
     } catch (e: any) {
       throw new Error(statement.AUTH.FAIL_LOGIN);
+    }
+  }
+
+  /**
+   * Send Verification Link To Email
+   * 
+   * @param {Request} req
+   * @returns {Promise<{ isAlreadySended: boolean, user: any | undefined }>}
+   */
+  public async sendVerificationLinkToEmail(req: Request): Promise<{ isAlreadySended: boolean, user: any | undefined }> {
+    try {
+      const userExists = await this._userModel.findOne({ email: req.body.email });
+
+      if (!userExists) throw new Error(statement.USER.FAIL_FIND);
+
+      // Block if user exists and their is active has been enabled
+      if (userExists && userExists.isActive) throw new Error(statement.AUTH.FAIL_SIGN_UP_ALREADY_ACTIVE);
+
+      let activationToken: string = uuidv4();
+      const link: string = String(process.env.GMAIL_SIGN_UP_USER_VERIFICATION).replace("{activationToken}", String(activationToken));
+      const dateNow: Date = new Date();
+      const dateNowPlusOneMinute: Date = new Date(new Date().setMinutes(dateNow.getMinutes() + 1));
+      const verifyUserAt: number = new Date().setHours(0, 0, 0, 0);
+
+      if ((userExists.access.verifyUserThrottle + 1) > 3) {
+        userExists.access.verifyUserAt = new Date(verifyUserAt).setDate(new Date(verifyUserAt).getDate() + 1);
+        userExists.access.verifyUserThrottle = 0;
+        await userExists.save();
+      }
+
+      // Block when verify user usage today is more than 3
+      if (new Date().setHours(0, 0, 0, 0) !== userExists.access.verifyUserAt && new Date().getTime() >= userExists.activationTokenExpiredAt) {
+        throw new Error(statement.AUTH.FAIL_VERIFY_USER_MORE_THAN_THREE_IN_SAME_DAY);
+      }
+
+      if (userExists.email && (new Date().getTime()) <= userExists.activationTokenExpiredAt) throw new Error(statement.AUTH.FAIL_VERIFY_USER_ACTIVATION_WAIT_A_MINUTE);
+
+      await MailService.getInstance().sendMail({
+        to: userExists.email,
+        subject: "Wafi Web App | Registration",
+        html: `<p>It seems you haven't completed the user verification for the link we sent to your email earlier. Alright then, here's the new <a href='${link}'>link</a></p>`
+      });
+
+      // Re-new Activation token code and activation token expired at
+      userExists.activationToken = activationToken;
+      userExists.activationTokenExpiredAt = dateNowPlusOneMinute.getTime();
+      userExists.access.verifyUserThrottle += 1;
+      await userExists.save();
+      return { isAlreadySended: false, user: userExists };
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Sign Up Functionality
+   * 
+   * @param {Request} req
+   * @param {mongoose.mongo.ClientSession} session
+   * @return {Promise<any>}
+   */
+  public async signUp(req: Request, session: mongoose.mongo.ClientSession): Promise<{ isAlreadySended: boolean, user: any | undefined, oneTimeDefPass?: string }> {
+    try {
+      const userExists = await this._userModel.findOne({ email: req.body.email });
+      
+      // Block if user exists and their is active has been enabled
+      if (userExists && userExists.isActive) throw new Error(statement.AUTH.FAIL_SIGN_UP_EMAIL_EXISTS);
+
+      let activationToken: string = uuidv4();
+      const link: string = String(process.env.GMAIL_SIGN_UP_USER_VERIFICATION).replace("{activationToken}", String(activationToken));
+      const password: string = req.body.password ? req.body.password : this._utilService.generateWafiDefaultPassword();
+      const hashedPassword = await this._bcryptService.hash(password)
+      const dateNow: Date = new Date();
+      const dateNowPlusOneMinute: Date = new Date(new Date().setMinutes(dateNow.getMinutes() + 1));
+      const verifyUserAt: number = new Date().setHours(0, 0, 0, 0);
+
+      // Create User when user has never been exists
+      if (!userExists) {
+        const auth = getAuth(FirebaseService.getInstance().getFirebaseApp());
+        const user: UserCredential | undefined = await createUserWithEmailAndPassword(auth, req.body.email, password);
+        const name: string = user.user.email ? user.user.email.split("@")[0] : "Unknown";
+
+        if (user.user.email) {
+          await MailService.getInstance().sendMail({
+            to: user.user.email,
+            subject: "Wafi Web App | Registration",
+            html: `<p>One small step left before you join as a beta user in our application. Please verify yourself by clicking this <a href='${link}'>link</a>. After this done, you might be able to logged in to our web app with your email and password</p>`
+          });
+
+          const createdUser: any = await this._userModel.create([{
+            uid: user.user.uid,
+            name,
+            email: user.user.email,
+            password: hashedPassword,
+            classifiedAs: "beta",
+            createdAt: dateNow.getTime(),
+            updatedAt: dateNow.getTime(),
+            modifiedBy: user.user.uid,
+            isActive: false,
+            activationToken: activationToken,
+            activationTokenExpiredAt: dateNowPlusOneMinute.getTime(),
+            access: {
+              verifyUserAt: verifyUserAt,
+              verifyUserThrottle: 0,
+            }
+          }], { session });
+
+          const returnData = { isAlreadySended: false, user: createdUser[0] };
+          return req.body.password ? returnData : { ...returnData, oneTimeDefPass: password };
+        }
+      }
+
+      // Re-send the Email Verification When User has been exists and is active is still not enabled
+      if (userExists && !userExists.isActive) {
+        if ((userExists.access.verifyUserThrottle + 1) > 3) {
+          userExists.access.verifyUserAt = new Date(verifyUserAt).setDate(new Date(verifyUserAt).getDate() + 1);
+          userExists.access.verifyUserThrottle = 0;
+          await userExists.save();
+        }
+
+        // Block when verify user usage today is more than 3
+        if (new Date().setHours(0, 0, 0, 0) !== userExists.access.verifyUserAt && new Date().getTime() >= userExists.activationTokenExpiredAt) {
+          throw new Error(statement.AUTH.FAIL_VERIFY_USER_MORE_THAN_THREE_IN_SAME_DAY);
+        }
+
+        if (userExists.email && (new Date().getTime()) >= userExists.activationTokenExpiredAt) {
+          await MailService.getInstance().sendMail({
+            to: userExists.email,
+            subject: "Wafi Web App | Registration",
+            html: `<p>It seems you haven't completed the user verification for the link we sent to your email earlier. Alright then, here's the new <a href='${link}'>link</a></p>`
+          });
+
+          // Re-new Activation token code and activation token expired at
+          userExists.activationToken = activationToken;
+          userExists.activationTokenExpiredAt = dateNowPlusOneMinute.getTime();
+          userExists.access.verifyUserThrottle += 1;
+          await userExists.save();
+          return { isAlreadySended: false, user: userExists };
+        }
+      }
+
+      return { isAlreadySended: true, user: userExists };
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Verify User After Sign Up
+   * 
+   * @param {string} activationToken 
+   * @returns {Promise<any>}
+   */
+  public async verifyUser(activationToken: string): Promise<any> {
+    try {
+      if (!activationToken) throw new Error();
+
+      const user: any = await this._userModel.findOne({
+        activationToken,
+      });
+      if (!user) throw new Error();
+
+      // Check User Activation Token Expiration Time
+      if (new Date().getTime() >= user.activationTokenExpiredAt) throw new Error();
+
+      user.activationToken = "";
+      user.isActive = true;
+      user.activationTokenExpiredAt = 0;
+      user.save();
+    } catch (e: any) {
+      throw new Error(e.message);
     }
   }
 

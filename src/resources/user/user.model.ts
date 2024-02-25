@@ -4,9 +4,18 @@ interface User extends Document {
   uid: string;
   name: string;
   email: string;
+  password: string;
+  classifiedAs: string;
   createdAt: number;
   updatedAt: number;
   modifiedBy: string;
+  isActive: boolean;
+  activationToken: string;
+  activationTokenExpiredAt: number;
+  access: {
+    verifyUserAt: number;
+    verifyUserThrottle: number;
+  }
 }
 
 const UserSchema = new Schema<User>({
@@ -22,6 +31,14 @@ const UserSchema = new Schema<User>({
     type: String,
     required: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
+  classifiedAs: {
+    type: String,
+    required: true,
+  },
   createdAt: {
     type: Number,
     required: true,
@@ -33,6 +50,22 @@ const UserSchema = new Schema<User>({
   modifiedBy: {
     type: String,
     required: true,
+  },
+  isActive: {
+    type: Boolean,
+    required: true,
+  },
+  activationToken: {
+    type: String,
+    required: false,
+  },
+  activationTokenExpiredAt: {
+    type: Number,
+    required: false,
+  },
+  access: {
+    verifyUserAt: { type: Number },
+    verifyUserThrottle: { type: Number },
   },
 });
 

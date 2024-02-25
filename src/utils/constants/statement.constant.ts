@@ -17,6 +17,21 @@ export namespace statement {
     FAIL_LOGIN: "Invalid Email or Password. Please try again",
     FAIL_VERIFY_TOKEN: "Fail to verify token, or the token has been expired.",
     FAIL_ACCESSING_SOURCE: "Authentication for your credential was denied.",
+    FAIL_ACCESSING_SOURCE_NOT_BETA_USER: "Authentication was denied cause you are not a beta user.",
+    FAIL_SIGN_UP_NOT_AGREED: "Please agree first before clicking the signup button.",
+    FAIL_SIGN_UP_MISSING_PASSWORD_CONFIRMATION: "Please fill password confirmation field.",
+    FAIL_SIGN_UP_PASSWORD_DOESNT_MATCH: "Password doesn't match, please try again.",
+    FAIL_SIGN_UP: "Fail to sign up. Please try again later or check your internet connection.",
+    FAIL_SIGN_UP_EMAIL_EXISTS: "Email is already exists. Please choose another one.",
+    FAIL_SIGN_UP_ALREADY_ACTIVE: "Your accound is already actived. Please login to continue.",
+    FAIL_VERIFY_USER_ACTIVATION_WAIT_A_MINUTE: "Please wait for the next minute and try to send the new beta user verification link.",
+    FAIL_VERIFY_USER_ACTIVATION_TOKEN_EXPIRED: "Fail to verify your beta user account.",
+    SUCCESS_VERIFY_USER: "Successfully verifying your beta user account. Welcome On Board ^_^",
+    FAIL_VERIFY_USER: "Fail to verify your beta user for some reason. Please try again.",
+    VERIFY_USER_LINK_ALREADY_SENT: "It looks like you've already have a beta account, but you're not verified yet. So please wait for the next minute and try to send the new beta user verification link below.",
+    FAIL_VERIFY_USER_MORE_THAN_THREE_IN_SAME_DAY: "Cannot verify your beta user today. Please try for the next day.",
+    SUCCESS_SIGN_UP: "We have sent a verification link to your email. Please verify your email within 1 minute.",
+    SUCCESS_SENT_VERIFICATION_LINK: "We have sent a verification link to your email. Please verify your email within 1 minute.",
   };
 
   export const TASK = {
@@ -94,5 +109,6 @@ export namespace statement {
   export const USER = {
     SUCCESS_GET_PROFILE: "Successfully getting your profile.",
     FAIL_GET_PROFILE: "Fail when getting your profile.",
+    FAIL_FIND: "Fail to find the user credential.",
   }
 }

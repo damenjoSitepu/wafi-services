@@ -1,4 +1,5 @@
 import { UtilServiceContract } from "@/utils/contracts/util-service.contract";
+import crypto from "crypto";
 
 class UtilService implements UtilServiceContract {
   /**
@@ -24,6 +25,53 @@ class UtilService implements UtilServiceContract {
     } catch (e: any) {
       return [];
     }
+  }
+
+  /**
+   * Generate Secure Random String
+   *  
+   * @returns {string}
+   */
+  public generateRandomSecureString(): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    let length = 20;
+    for (let i = 0; i < length; i++) {
+      const randomIndex = crypto.randomInt(characters.length);
+      result += characters.charAt(randomIndex);
+    }
+    return result;
+  }
+
+  /**
+   * Generate Wafi Default Password using random string method
+   * 
+   * @returns {string}
+   */
+  public generateWafiDefaultPassword(): string {
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+        result += this.generateRandomString(5);
+        if (i !== 4) {
+            result += ' '; 
+        }
+    }
+    return result;
+  }
+
+  /**
+   * Generate Normal Random String
+   * 
+   * @param {number} length 
+   * @returns {string}
+   */
+  public generateRandomString(length: number): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
   }
 }
 
