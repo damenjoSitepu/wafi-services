@@ -5,6 +5,8 @@ import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
 import { user } from "@/resources/user/user.type";
 import { UserModel } from "@/resources/user/user.model";
+import JWTService from "@/utils/services/jwt.service";
+import { jwt } from "@/utils/contracts/jwt.contract";
 
 /**
  * SocketIO Auth Middleware
@@ -62,23 +64,20 @@ async function express(
   }
 
   try {
-    const idToken: string = bearer.split("Bearer ")[1].trim();
-    const decodedIdToken: DecodedIdToken = await FirebaseService.getInstance().getFirebaseAdmin().auth().verifyIdToken(idToken);
-    if (!decodedIdToken) {
-      throw new Error();
-    }
+    const accessToken: string = bearer.split("Bearer ")[1].trim();
+    const verifiedPayload: jwt.Payload = await new JWTService().verifyToken(accessToken);
 
-    const userExist: any = await UserModel.findOne({ uid: decodedIdToken.uid });
+    const userExist: any = await UserModel.findOne({ uid: verifiedPayload.uid });
     if (!userExist) throw new Error(statement.AUTH.FAIL_ACCESSING_SOURCE);
     if (!userExist.isActive) throw new Error(statement.AUTH.FAIL_ACCESSING_SOURCE_NOT_BETA_USER);
 
     const user: user.Data = {
-      uid: decodedIdToken.uid,
-      email: String(decodedIdToken.email),
+      uid: verifiedPayload.uid,
+      email: String(verifiedPayload.email),
       name: "",
     };
     req.user = user;
-    
+
     return next();
   } catch (e: any) {
     return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({

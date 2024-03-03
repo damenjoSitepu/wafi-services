@@ -2,7 +2,7 @@ import AuthServiceContract from "@/resources/auth/auth-service.contract";
 import { statement } from "@/utils/constants/statement.constant";
 import FirebaseService from "@/utils/services/firebase.service";
 import { DecodedIdToken } from "firebase-admin/lib/auth/token-verifier";
-import { Auth, UserCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { Auth, UserCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth, updatePassword, signInWithEmailLink, fetchSignInMethodsForEmail } from "firebase/auth";
 import UtilService from "@/utils/services/util.service";
 import { UserModel } from "@/resources/user/user.model";
 import MailService from "@/utils/services/mail.service";
@@ -11,6 +11,9 @@ import { user } from "@/resources/user/user.type";
 import { Request } from "express"; 
 import mongoose from "mongoose";
 import BcryptService from "@/utils/services/bcrypt.service";
+import { UserRecord } from "firebase-admin/lib/auth/user-record";
+import { emailTemplate } from "@/utils/constants/email-template.constant";
+import JWTService from "@/utils/services/jwt.service";
 
 class AuthService implements AuthServiceContract {
   /**
@@ -18,6 +21,7 @@ class AuthService implements AuthServiceContract {
    */
   private _utilService: UtilService = new UtilService();
   private _bcryptService: BcryptService = new BcryptService();
+  private _jwtService: JWTService = new JWTService();
 
   /**
    * Models
@@ -81,7 +85,7 @@ class AuthService implements AuthServiceContract {
       await MailService.getInstance().sendMail({
         to: userExists.email,
         subject: "Wafi Web App | Registration",
-        html: `<p>It seems you haven't completed the user verification for the link we sent to your email earlier. Alright then, here's the new <a href='${link}'>link</a></p>`
+        html: emailTemplate.auth.resendSignUpVerification(link),
       });
 
       // Re-new Activation token code and activation token expired at
@@ -90,6 +94,20 @@ class AuthService implements AuthServiceContract {
       userExists.access.verifyUserThrottle += 1;
       await userExists.save();
       return { isAlreadySended: false, user: userExists };
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  public async changePassword(immediately: string): Promise<any> {
+    try {
+      const user: any = await this._userModel.findOne({
+        resetPasswordToken: immediately,
+      });
+      if (!user) throw new Error(statement.AUTH.FAIL_VERIFY_RESET_PASSWORD);
+
+      const userRecord: UserRecord = await FirebaseService.getInstance().getFirebaseAdmin().auth().getUser(user.uid);
+      const a = getAuth(FirebaseService.getInstance().getFirebaseApp()).currentUser;
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -110,6 +128,7 @@ class AuthService implements AuthServiceContract {
       if (userExists && userExists.isActive) throw new Error(statement.AUTH.FAIL_SIGN_UP_EMAIL_EXISTS);
 
       let activationToken: string = uuidv4();
+      let uid: string = uuidv4();
       const link: string = String(process.env.GMAIL_SIGN_UP_USER_VERIFICATION).replace("{activationToken}", String(activationToken));
       const password: string = req.body.password ? req.body.password : this._utilService.generateWafiDefaultPassword();
       const hashedPassword = await this._bcryptService.hash(password)
@@ -119,26 +138,24 @@ class AuthService implements AuthServiceContract {
 
       // Create User when user has never been exists
       if (!userExists) {
-        const auth = getAuth(FirebaseService.getInstance().getFirebaseApp());
-        const user: UserCredential | undefined = await createUserWithEmailAndPassword(auth, req.body.email, password);
-        const name: string = user.user.email ? user.user.email.split("@")[0] : "Unknown";
+        const name: string = req.body.email ? req.body.email.split("@")[0] : "Unknown";
 
-        if (user.user.email) {
+        if (req.body.email) {
           await MailService.getInstance().sendMail({
-            to: user.user.email,
+            to: req.body.email,
             subject: "Wafi Web App | Registration",
-            html: `<p>One small step left before you join as a beta user in our application. Please verify yourself by clicking this <a href='${link}'>link</a>. After this done, you might be able to logged in to our web app with your email and password</p>`
+            html: emailTemplate.auth.signUpVerification(link),
           });
 
           const createdUser: any = await this._userModel.create([{
-            uid: user.user.uid,
+            uid,
             name,
-            email: user.user.email,
+            email: req.body.email,
             password: hashedPassword,
             classifiedAs: "beta",
             createdAt: dateNow.getTime(),
             updatedAt: dateNow.getTime(),
-            modifiedBy: user.user.uid,
+            modifiedBy: uid,
             isActive: false,
             activationToken: activationToken,
             activationTokenExpiredAt: dateNowPlusOneMinute.getTime(),
@@ -170,7 +187,7 @@ class AuthService implements AuthServiceContract {
           await MailService.getInstance().sendMail({
             to: userExists.email,
             subject: "Wafi Web App | Registration",
-            html: `<p>It seems you haven't completed the user verification for the link we sent to your email earlier. Alright then, here's the new <a href='${link}'>link</a></p>`
+            html: emailTemplate.auth.resendSignUpVerification(link),
           });
 
           // Re-new Activation token code and activation token expired at
@@ -183,6 +200,59 @@ class AuthService implements AuthServiceContract {
       }
 
       return { isAlreadySended: true, user: userExists };
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Verify Reset Password Token
+   * 
+   * @param {string} token 
+   * @returns {Promise<boolean>}
+   */
+  public async verifyResetPasswordToken(token: string): Promise<boolean> {
+    try {
+      const user: any = await this._userModel.findOne({
+        resetPasswordToken: token,
+      });
+
+      if (!user) return false;
+
+      if (new Date().getTime() >= user.resetPasswordTokenExpiredAt) {
+        user.resetPasswordToken = "";
+        user.resetPasswordTokenExpiredAt = 0;
+        user.save();
+        return false;
+      }
+
+      return true;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Login Functionality
+   * 
+   * @param {string} email 
+   * @param {string} password
+   * @returns {Promise<string>}
+   */
+  public async login(email: string, password: string): Promise<string> {
+    try {
+      const user: user.Data | null = await this._userModel.findOne({
+        email
+      });
+      // Fail To Find User
+      if (!user) throw new Error(statement.AUTH.FAIL_LOGIN);
+      if (! await this._bcryptService.compare(password, user.password ?? "")) throw new Error(statement.AUTH.FAIL_LOGIN);
+
+      // Generate JWT Token When User Successfully Login
+      return this._jwtService.generateToken({
+        uid: user.uid,
+        email: user.email
+      });
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -226,6 +296,37 @@ class AuthService implements AuthServiceContract {
       return await FirebaseService.getInstance().getFirebaseAdmin().auth().verifyIdToken(idToken);
     } catch (e: any) {
       throw new Error(statement.AUTH.FAIL_VERIFY_TOKEN);
+    }
+  }
+
+  /**
+   * Send Reset Password Link
+   * 
+   * @param {user.Data} user 
+   * @returns {Promise<void>}
+   */
+  public async sendResetPasswordLink(user: user.Data): Promise<void> {
+    try {
+      let resetPasswordActivationToken: string = uuidv4();
+      let link: string = String(process.env.RESET_PASSWORD_USER_REDIRECT_URL_TO_WEB_APP).replace("{indication}", "true").replace("{immediately}", resetPasswordActivationToken);
+      const dateNow: Date = new Date();
+      const dateNowPlusFiveMinute: Date = new Date(new Date().setMinutes(dateNow.getMinutes() + 5));
+
+      await MailService.getInstance().sendMail({
+        to: user.email,
+        subject: "Wafi Web App | Reset Password Link Verification",
+        html: `<p>Here's the <a href='${link}'>link</a> for reset password verification. Hope you understand that credential is so important to you, so don't forget it anymore.</p>`,
+      });
+
+      await this._userModel.updateOne({
+        uid: user.uid,
+        email: user.email
+      }, {
+        resetPasswordToken: resetPasswordActivationToken,
+        resetPasswordTokenExpiredAt: dateNowPlusFiveMinute,
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
     }
   }
 }

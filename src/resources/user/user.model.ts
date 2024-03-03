@@ -12,6 +12,8 @@ interface User extends Document {
   isActive: boolean;
   activationToken: string;
   activationTokenExpiredAt: number;
+  resetPasswordToken: string;
+  resetPasswordTokenExpiredAt: number;
   access: {
     verifyUserAt: number;
     verifyUserThrottle: number;
@@ -60,6 +62,14 @@ const UserSchema = new Schema<User>({
     required: false,
   },
   activationTokenExpiredAt: {
+    type: Number,
+    required: false,
+  },
+  resetPasswordToken: {
+    type: String,
+    required: false,
+  },
+  resetPasswordTokenExpiredAt: {
     type: Number,
     required: false,
   },

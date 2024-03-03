@@ -3,6 +3,7 @@ export namespace user {
     email: string;
     name: string;
     uid: string;
+    password?: string
   };
 }
 

@@ -17,9 +17,11 @@ export namespace statement {
     FAIL_LOGIN: "Invalid Email or Password. Please try again",
     FAIL_VERIFY_TOKEN: "Fail to verify token, or the token has been expired.",
     FAIL_ACCESSING_SOURCE: "Authentication for your credential was denied.",
+    SUCCESS_ACCESSING_SOURCE: "Authentication for your credential was confirmed.",
     FAIL_ACCESSING_SOURCE_NOT_BETA_USER: "Authentication was denied cause you are not a beta user.",
     FAIL_SIGN_UP_NOT_AGREED: "Please agree first before clicking the signup button.",
     FAIL_SIGN_UP_MISSING_PASSWORD_CONFIRMATION: "Please fill password confirmation field.",
+    FAIL_SIGN_UP_PLEASE_FILL_IS_AGREED_FIELD: "Please fill is agreement field before doing sign up.",
     FAIL_SIGN_UP_PASSWORD_DOESNT_MATCH: "Password doesn't match, please try again.",
     FAIL_SIGN_UP: "Fail to sign up. Please try again later or check your internet connection.",
     FAIL_SIGN_UP_EMAIL_EXISTS: "Email is already exists. Please choose another one.",
@@ -32,6 +34,10 @@ export namespace statement {
     FAIL_VERIFY_USER_MORE_THAN_THREE_IN_SAME_DAY: "Cannot verify your beta user today. Please try for the next day.",
     SUCCESS_SIGN_UP: "We have sent a verification link to your email. Please verify your email within 1 minute.",
     SUCCESS_SENT_VERIFICATION_LINK: "We have sent a verification link to your email. Please verify your email within 1 minute.",
+    SUCCESS_SENT_RESET_PASSWORD_LINK: "Successfully sent your reset password link to your email. Please take a note that link only valid for 5 minutes",
+    FAIL_VERIFY_RESET_PASSWORD: "Fail to verify your reset password token. It may caused because you didn't change the password at least five minutes ago.",
+    SUCCESS_VERIFY_RESET_PASSWORD: "Successfully verify your reset password token.",
+    SUCCESS_CHANGE_PASSWORD: "Successfully change your password. Please try to login the web app.",
   };
 
   export const TASK = {
@@ -110,5 +116,6 @@ export namespace statement {
     SUCCESS_GET_PROFILE: "Successfully getting your profile.",
     FAIL_GET_PROFILE: "Fail when getting your profile.",
     FAIL_FIND: "Fail to find the user credential.",
+    FAIL_FIND_BY_EMAIL: "Fail to find your email. Please try again.",
   }
 }

@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import { statement } from "@/utils/constants/statement.constant";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -6,6 +6,9 @@ import ControllerContract from "@/utils/contracts/controller.contract";
 import compression from "compression";
 import FirebaseService from "@/utils/services/firebase.service";
 import CloudinaryService from "@/utils/services/cloudinary.service";
+import multer from "multer";
+import { httpResponseStatusCode } from "./utils/constants/http-response-status-code.constant";
+import ExpressService from "@/utils/services/express.service";
  
 class App {
   /**
@@ -24,7 +27,7 @@ class App {
   private _apiVersion: string;
 
   /**
-   * Initialize Express Application
+   * Initialize Express Applicationf
    * 
    * @param {number} port 
    * @param {string} apiVersion
@@ -53,7 +56,7 @@ class App {
    */
   private _enableConfig(): void {
     try {
-      this._application.enable('trust proxy');
+      this._application.disable('trust proxy');
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -125,11 +128,26 @@ class App {
   private _initializeMiddleware(): void {
     try {
       this._application.use(cors());
+      // Rate Limiter
+      this._application.use(ExpressService.getInstance().enableRateLimiter());
       this._application.use(express.json());
       this._application.use(express.urlencoded({
         extended: false,
-        limit: 10000
+        limit: 10000,
       }));
+      this._application.use(multer().single("file"));
+      this._application.use((req: Request, res: Response, next: NextFunction) => {
+        // Only User With Allowed URL Can Make The Request
+        if (req.headers.origin) {
+          if (req.headers.origin !== process.env.ALLOWED_URL_ORIGIN) {
+            return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+              statement: statement.EXPRESS_APP.INVALID_REQUEST,
+            });
+          }
+        }
+
+        return next();
+      });
       this._application.use(compression());
     } catch (e: any) {
       throw new Error(e.message);
