@@ -32,7 +32,7 @@ class FeaturesService {
           name: { $regex: featureName, $options: "i" }
         });
 
-        return check ? true : false;
+        return check?.name?.toLowerCase() === featureName.toLowerCase() ? true : false;
       } 
 
       // Except The Row With Attached FID
@@ -41,7 +41,7 @@ class FeaturesService {
         name: { $regex: featureName, $options: "i" },
         fid: { $ne: fid },
       });
-      return check ? true : false;
+      return check?.name?.toLowerCase() === featureName.toLowerCase() ? true : false;
     } catch (e: any) {
       throw new Error(statement.FEATURES.FAIL_STORE_UNIQUE_NAME_BLOCKER);
     }

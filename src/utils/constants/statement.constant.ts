@@ -124,6 +124,8 @@ export namespace statement {
     FAIL_GET: "Fail when getting the features.",
     SUCCESS_STORE: "Successfully creating the features.",
     FAIL_STORE: "Fail when creating the features.",
+    FAIL_STORE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE: "This module originates from a higher-level module that is currently inactive. You are not permitted to create this feature with active status unless the higher-level module is activated first.",
+    FAIL_STORE_PARENT_NOT_FOUND: "We already detecting that the feature you've been want to create does have higher level module, but we cannot find it. Please try again",
     FAIL_STORE_UNIQUE_NAME_BLOCKER: "Fail when creating the features due to unique name validation. Please choose another one.",
     SUCCESS_FIND: "Successfully find the feature.",
     FAIL_FIND: "Fail to find the feature.",
@@ -132,5 +134,7 @@ export namespace statement {
     RENAME_TITLE_NOTHING_CHANGES: "It seems there were no changes made to the feature name as you requested.",
     FAIL_TOGGLE_STATUS: "Fail to actived or deactivated the feature.",
     FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE: "This module originates from a higher-level module that is currently inactive. You are not permitted to activate it unless the higher-level module is activated first.",
+    SUCCESS_DELETE: "Successfully deleting the feature.",
+    FAIL_DELETE: "Fail when deleting the feature.",
   };
 }

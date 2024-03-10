@@ -92,6 +92,20 @@ class FeaturesController {
         statement: statement.FEATURES.FAIL_STORE_UNIQUE_NAME_BLOCKER,
       });
     }
+
+    // Check if isActive request is true and have parent which their status was inactived, we need to block it
+    if ((req.body.isActive === "true" ? true : false) && req.body.parent) {
+      const checkParentIsActive: features.Data = await this._featuresService.findParent(req.body.parent);
+      if (checkParentIsActive && !checkParentIsActive.isActive) {
+        return res.status(httpResponseStatusCode.FAIL.FORBIDDEN).json({
+          statement: statement.FEATURES.FAIL_STORE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE,
+        });
+      } else {
+        return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
+          statement: statement.FEATURES.FAIL_STORE_PARENT_NOT_FOUND,
+        });
+      }
+    }
     
     const session: mongoose.mongo.ClientSession = await mongoose.startSession();
 
@@ -178,7 +192,7 @@ class FeaturesController {
       if (feature.parent) {
         const parentFeature: features.Data = await this._featuresService.findParent(feature.parent);
         if (parentFeature && !parentFeature.isActive) {
-          return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+          return res.status(httpResponseStatusCode.FAIL.FORBIDDEN).json({
             statement: statement.FEATURES.FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE,
           });
         }
@@ -252,6 +266,44 @@ class FeaturesController {
   }
 
   /**
+   * Delete Feature And Its Own Depedencies 
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _delete = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      // Make sure that feature is exists
+      const feature: features.Data = await this._featuresService.findById(req.params.fid);
+      if (!feature) {
+        return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
+          statement: statement.FEATURES.FAIL_FIND,
+        });
+      }
+      // ABC
+
+      // Delete feature mechanism: 
+      // 1. Make sure that feature is exists
+      // 1. delete the feature and its own all child ids.
+      // 2. if the deleted feature have parent, we also need to delete childIds and allchildids on the parent feature
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.FEATURES.SUCCESS_DELETE,
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: e.message,
+      });
+    }
+  }
+
+  /**
    * Initialize Routes
    * 
    * @returns {void}
@@ -270,6 +322,13 @@ class FeaturesController {
       authMiddleware.express,
       validationMiddleware(featuresValidation.create),
       this._store,
+    );
+
+    // Delete Feature
+    this.router.delete(
+      `${this.path}/:fid`,
+      authMiddleware.express,
+      this._delete,
     );
 
     // Update Feature Name

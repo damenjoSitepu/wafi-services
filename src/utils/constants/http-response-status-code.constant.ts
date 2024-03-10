@@ -3,7 +3,7 @@ export namespace httpResponseStatusCode {
     OK: 200,
     CREATED: 201,
     PERMANENT_REDIRECT: 301,
-    INTERNAL_SERVER_ERROR: 500,
+    NO_CONTENT: 204,
   };
 
   export const FAIL = {
@@ -13,5 +13,6 @@ export namespace httpResponseStatusCode {
     CONFLICT: 409,
     NOT_FOUND: 404,
     NOT_MODIFIED: 304,
+    FORBIDDEN: 403,
   };
 }
