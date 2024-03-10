@@ -8,6 +8,7 @@ import StatusController from "@/resources/status/status.controller";
 import MicrosoftTeamsIntegrationController from "@/resources/microsoft-teams-integration/microsoft-teams-integration.controller";
 import ActivityLogsController from "@/resources/activity-logs/activity-logs.controller";
 import UserController from "@/resources/user/user.controller";
+import FeaturesController from "@/resources/features/features.controller";
 import Seeder from "@/seeders/seeder";
 
 const PORT: number = Number(process.env.PORT) || 8080;
@@ -24,6 +25,7 @@ try {
       new MicrosoftTeamsIntegrationController(),
       new ActivityLogsController(),
       new UserController(),
+      new FeaturesController(),
     ],
   )).listen();
 

@@ -4,6 +4,7 @@ import { httpResponseStatusCode } from "@/utils/constants/http-response-status-c
 import { statement } from "@/utils/constants/statement.constant";
 import sanitizeHtml from 'sanitize-html';
 import RequestCore from "@/utils/cores/request.core";
+import { ENVIRONMENT } from "@/utils/constants/environment.constant";
 
 function validationMiddleware(schema: Joi.Schema): RequestHandler {
   return async(
@@ -27,15 +28,28 @@ function validationMiddleware(schema: Joi.Schema): RequestHandler {
         }
       }
 
-      // Api Definition Must Be Required
-      if (!req.body._apiDefinition) {
+      if (process.env.ENVIRONMENT === ENVIRONMENT.DEVELOPMENT) {
+        // Development Mode
+
+        // New Mechanism For Development Will Develop In The Future
+      } else if (process.env.ENVIRONMENT === ENVIRONMENT.PRODUCTION) {
+        // Production Mode
+
+        // Api Definition Must Be Required
+        if (!req.body._apiDefinition) {
+          return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+            statement: statement.EXPRESS_APP.INVALID_REQUEST,
+          });
+        }
+
+        // Request Core To Decypt The Api Payloads
+        new RequestCore(req.body._apiDefinition, req);
+      } else {
+        // Error When Environment Was Not Identified
         return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
           statement: statement.EXPRESS_APP.INVALID_REQUEST,
         });
       }
-
-      // Request Core To Decypt The Api Payloads
-      new RequestCore(req.body._apiDefinition, req);
 
       const value = await schema.validateAsync(
         req.body,

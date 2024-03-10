@@ -7,6 +7,7 @@ import { user } from "@/resources/user/user.type";
 import { UserModel } from "@/resources/user/user.model";
 import JWTService from "@/utils/services/jwt.service";
 import { jwt } from "@/utils/contracts/jwt.contract";
+import AuthService from "@/utils/services/auth.service";
 
 /**
  * SocketIO Auth Middleware
@@ -76,8 +77,12 @@ async function express(
       email: String(verifiedPayload.email),
       name: "",
     };
+    
     req.user = user;
 
+    // Store To Auth Singleton Service To Retrieve The User Data Instanly For The Request
+    AuthService.getInstance().setUser(req.user);
+    
     return next();
   } catch (e: any) {
     return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({

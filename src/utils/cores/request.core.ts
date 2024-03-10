@@ -6,6 +6,7 @@ class RequestCore {
    * Mapper Definitions
    */
   public mapperDefinitions: { [key: string]: (req: Request) => void } = {
+    // Auth
     "WAFI/WEB-APP/AUTH/SIGN-UP": (req) => CryptoService.getInstance().decryptPayload(req, {
       "_x": "email",
       "_m": "password",
@@ -18,6 +19,12 @@ class RequestCore {
     "WAFI/WEB-APP/AUTH/LOGIN": (req) => CryptoService.getInstance().decryptPayload(req, {
       "_sa": "email",
       "_pzn": "password",
+    }),
+    // Features
+    "WAFI/WEB-APP/FEATURES/CREATE": (req) => CryptoService.getInstance().decryptPayload(req, {
+      "_aab": "name",
+      "_uc": "isActive",
+      "_def": "parent",
     }),
   };
 

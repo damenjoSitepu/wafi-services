@@ -101,7 +101,7 @@ export namespace statement {
   export const SOCKET_IO = {
     SUCCESS_CONNECT: "Successfully establish socket io connection.",
     FAIL_CONNECT: "Fail to connect socket io connection.",
-  }
+  };
 
   export const ACTIVITY_LOGS = {
     SUCCESS_GET: "Successfully getting your activity logs.",
@@ -110,12 +110,24 @@ export namespace statement {
     FAIL_SHOW: "Fail when find your activity log.",
     SUCCESS_GET_TIMELINE: "Successfully getting your activity logs timeline.",
     FAIL_GET_TIMELINE: "Fail when getting your activity logs timeline.",
-  }
+  };
 
   export const USER = {
     SUCCESS_GET_PROFILE: "Successfully getting your profile.",
     FAIL_GET_PROFILE: "Fail when getting your profile.",
     FAIL_FIND: "Fail to find the user credential.",
     FAIL_FIND_BY_EMAIL: "Fail to find your email. Please try again.",
-  }
+  };
+
+  export const FEATURES = {
+    SUCCESS_GET: "Successfully getting the features.",
+    FAIL_GET: "Fail when getting the features.",
+    SUCCESS_STORE: "Successfully creating the features.",
+    FAIL_STORE: "Fail when creating the features.",
+    FAIL_STORE_UNIQUE_NAME_BLOCKER: "Fail when creating the features due to unique name validation. Please choose another one.",
+    SUCCESS_FIND: "Successfully find the feature.",
+    FAIL_FIND: "Fail when finding the feature.",
+    SUCCESS_TOGGLE_STATUS: "Feature has been {status}.",
+    FAIL_TOGGLE_STATUS: "Fail to actived or deactivated the feature.",
+  };
 }
