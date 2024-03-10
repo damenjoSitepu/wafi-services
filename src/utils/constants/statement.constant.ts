@@ -126,8 +126,9 @@ export namespace statement {
     FAIL_STORE: "Fail when creating the features.",
     FAIL_STORE_UNIQUE_NAME_BLOCKER: "Fail when creating the features due to unique name validation. Please choose another one.",
     SUCCESS_FIND: "Successfully find the feature.",
-    FAIL_FIND: "Fail when finding the feature.",
+    FAIL_FIND: "Fail to find the feature.",
     SUCCESS_TOGGLE_STATUS: "Feature has been {status}.",
     FAIL_TOGGLE_STATUS: "Fail to actived or deactivated the feature.",
+    FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE: "This module originates from a higher-level module that is currently inactive. You are not permitted to activate it unless the higher-level module is activated first.",
   };
 }

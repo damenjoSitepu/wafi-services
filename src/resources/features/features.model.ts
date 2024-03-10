@@ -7,6 +7,7 @@ interface Features extends Document {
   parent: string | null;
   isActive: boolean;
   childIds: string[];
+  allChildIds: string[];
   createdAt: number;
   updatedAt: number;
   modifiedBy: string;
@@ -37,6 +38,10 @@ const FeaturesSchema = new Schema<Features>({
     type: [String],
     required: false,
   },
+  allChildIds: {
+    type: [String],
+    required: false,
+  },
   createdAt: {
     type: Number,
     required: true,
@@ -57,7 +62,11 @@ const FeaturesSchema = new Schema<Features>({
 
 // Define Is 
 FeaturesSchema.virtual("isAbleToExpand").get(function () {
-  return this.childIds.length > 0;
+  try {
+    return this.childIds.length > 0;
+  } catch (e: any) {
+    return false;
+  }
 });
 
 export const FeaturesModel = mongoose.model<Features>("features", FeaturesSchema, "features");

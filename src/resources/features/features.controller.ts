@@ -166,14 +166,32 @@ class FeaturesController {
     next: NextFunction 
   ): Promise<Response | void> => {
     try {
-      const isActive: boolean = await this._featuresService.toggleStatus(req.params.fid);
-
+      // Check The Feature Is Exists Or Not
       const feature: features.Data = await this._featuresService.findById(req.params.fid);
+      if (!feature) {
+        return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
+          statement: statement.FEATURES.FAIL_FIND
+        });
+      }
+
+      // If the feature have parent, we need to check the parent first. If we want to make this feature activate, also make sure the parent is active too
+      if (feature.parent) {
+        const parentFeature: features.Data = await this._featuresService.findParent(feature.parent);
+        if (parentFeature && !parentFeature.isActive) {
+          return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+            statement: statement.FEATURES.FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE,
+          });
+        }
+      }
+
+      const isActive: boolean = await this._featuresService.toggleStatus(feature, req.params.fid);
+
+      const features: features.Data[] = await this._featuresService.findParentAndTheirAllChildren(req.params.fid);
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.FEATURES.SUCCESS_TOGGLE_STATUS.replace("{status}", isActive ? "Activated" : "Deactivated"),
         data: {
-          feature: this._collectionService.detachCredential(["_id", "id", "childIds"], [feature])[0],
+          features: this._collectionService.detachCredential(["_id", "id", "childIds"], features),
         },
       });
     } catch (e: any) {
@@ -182,8 +200,6 @@ class FeaturesController {
       });
     }
   }
-
-
 
   /**
    * Initialize Routes

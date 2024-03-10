@@ -3,6 +3,7 @@ export namespace features {
     _id: string;
     fid: string;
     name?: string;
+    parent: string;
   };
 
   export type Data = {
@@ -12,5 +13,6 @@ export namespace features {
     parent: string | null;
     isActive: boolean;
     childIds: string[];
+    allChildIds: string[];
   };
 }
