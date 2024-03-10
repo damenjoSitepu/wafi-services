@@ -16,17 +16,31 @@ class FeaturesService {
   /**
    * Check Is Feature Name Is Exists Or Not (Case Insensitive Checker)
    * 
+   * When third parameter (fid) filled, that means we check unique name to the collection without the (fid) row
+   * 
    * @param {user.Data} user 
    * @param {string} featureName 
+   * @param {string} fid
    * @returns {Promise<boolean>}
    */
-  public async checkIsRegistered(user: user.Data, featureName: string): Promise<boolean> {
+  public async checkIsRegistered(user: user.Data, featureName: string, fid: string = ""): Promise<boolean> {
     try {
-      const check: features.MinifiedData | null = await this._featuresModel.findOne({
-        uid: user.uid,
-        name: { $regex: featureName, $options: "i" }
-      })
+      // Include All Row To Check Feature Name Uniqueness
+      if (!fid) {
+        const check: features.MinifiedData | null = await this._featuresModel.findOne({
+          uid: AuthService.getInstance().user().uid,
+          name: { $regex: featureName, $options: "i" }
+        });
 
+        return check ? true : false;
+      } 
+
+      // Except The Row With Attached FID
+      const check: features.MinifiedData | null = await this._featuresModel.findOne({
+        uid: AuthService.getInstance().user().uid,
+        name: { $regex: featureName, $options: "i" },
+        fid: { $ne: fid },
+      });
       return check ? true : false;
     } catch (e: any) {
       throw new Error(statement.FEATURES.FAIL_STORE_UNIQUE_NAME_BLOCKER);
@@ -317,6 +331,27 @@ class FeaturesService {
           }
         ],
       }).select({ fid: 1, name: 1, parent: 1, isActive: 1, "-_id": -1, childIds: 1 });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Rename The Feature Title
+   * 
+   * @param {string} fid
+   * @param {string} name 
+   * @returns {Promise<void>}
+   */
+  public async renameTitle(fid: string, name: string): Promise<void> {
+    try {
+      await this._featuresModel.updateOne({
+        uid: AuthService.getInstance().user().uid,
+        fid,
+      }, {
+        updatedAt: Date.now(),
+        name,
+      });
     } catch (e: any) {
       throw new Error(e.message);
     }

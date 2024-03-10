@@ -202,6 +202,56 @@ class FeaturesController {
   }
 
   /**
+   * Rename The Feature Title API
+   * 
+   * @param {Request} req 
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _renameTitle = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      // Find The Existing Feature Data
+      const feature: features.Data = await this._featuresService.findById(req.params.fid);
+      if (!feature) {
+        return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
+          statement: statement.FEATURES.FAIL_FIND,
+        });
+      }
+
+      // Check If Name, Was Same As Before, We Know That No Changes Happen
+      if (feature.name === req.body.name) {
+        return res.status(httpResponseStatusCode.FAIL.NOT_MODIFIED).json({
+          statement: statement.FEATURES.RENAME_TITLE_NOTHING_CHANGES,
+        });
+      }
+
+      // Check If The Feature Already Registered OR Not (Base On name Uniqueness)
+      const checkIsRegistered: boolean = await this._featuresService.checkIsRegistered(req.user, req.body.name, String(req.params.fid));
+      if (checkIsRegistered) {
+        return res.status(httpResponseStatusCode.FAIL.CONFLICT).json({
+          statement: statement.FEATURES.FAIL_STORE_UNIQUE_NAME_BLOCKER,
+        });
+      }
+
+      // Update The Title
+      await this._featuresService.renameTitle(String(req.params.fid), String(req.body.name));
+
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.FEATURES.SUCCESS_RENAME_TITLE,
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: e.message,
+      });
+    }
+  }
+
+  /**
    * Initialize Routes
    * 
    * @returns {void}
@@ -222,11 +272,19 @@ class FeaturesController {
       this._store,
     );
 
+    // Update Feature Name
+    this.router.put(
+      `${this.path}/:fid/rename-title`,
+      authMiddleware.express,
+      validationMiddleware(featuresValidation.renameTitle),
+      this._renameTitle,
+    );
+
     // Update Active Status From Certain Feature
     this.router.post(
       `${this.path}/:fid/toggle-status`,
       authMiddleware.express,
-      this._toggleStatus
+      this._toggleStatus,
     );
 
     // Get Feature

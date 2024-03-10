@@ -12,5 +12,6 @@ export namespace httpResponseStatusCode {
     INTERNAL_SERVER_ERROR: 500,
     CONFLICT: 409,
     NOT_FOUND: 404,
+    NOT_MODIFIED: 304,
   };
 }

@@ -128,6 +128,8 @@ export namespace statement {
     SUCCESS_FIND: "Successfully find the feature.",
     FAIL_FIND: "Fail to find the feature.",
     SUCCESS_TOGGLE_STATUS: "Feature has been {status}.",
+    SUCCESS_RENAME_TITLE: "Feature name successfully renamed.",
+    RENAME_TITLE_NOTHING_CHANGES: "It seems there were no changes made to the feature name as you requested.",
     FAIL_TOGGLE_STATUS: "Fail to actived or deactivated the feature.",
     FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE: "This module originates from a higher-level module that is currently inactive. You are not permitted to activate it unless the higher-level module is activated first.",
   };

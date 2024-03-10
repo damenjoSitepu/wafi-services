@@ -26,6 +26,9 @@ class RequestCore {
       "_uc": "isActive",
       "_def": "parent",
     }),
+    "WAFI/WEB-APP/FEATURES/RENAME-TITLE": (req) => CryptoService.getInstance().decryptPayload(req, {
+      "_wp": "name",
+    }),
   };
 
   /**

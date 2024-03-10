@@ -6,4 +6,8 @@ export namespace featuresValidation {
     isActive: Joi.string().required(),
     parent: Joi.string().allow(""),
   });
+
+  export const renameTitle = Joi.object({
+    name: Joi.string().required().max(125),
+  })
 }
