@@ -31,5 +31,6 @@ export namespace features {
     key: string;
     title: string;
     isInc: boolean;
+    value: number;
   };
 }

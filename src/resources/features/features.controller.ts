@@ -116,6 +116,7 @@ class FeaturesController {
         key: "totalFeatures",
         title: "Total Features",
         isInc: true,
+        value: 1,
       }, session);
       await session.commitTransaction();
 
@@ -306,6 +307,12 @@ class FeaturesController {
       // Delete the feature and its own all child ids.
       await this._featuresService.delete(deletedFeaturesFid, session);
       await this._featuresService.deleteChildIds(feature, session);
+      await this._featuresService.settingDashboard({
+        key: "totalFeatures",
+        title: "Total Features",
+        isInc: false,
+        value: deletedFeaturesFid.length,
+      }, session);
       await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({

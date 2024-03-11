@@ -479,7 +479,7 @@ class FeaturesService {
             fdid: uuidv4(),
             key: req.key,
             title: req.title,
-            value: 1,
+            value: req.value,
             createdAt: Date.now(),
             updatedAt: Date.now(),
           }
@@ -493,7 +493,7 @@ class FeaturesService {
           key: req.key,
           title: req.title
         }, {
-          $inc: { value: 1 },
+          $inc: { value: req.isInc ? req.value : -req.value },
           updatedAt: Date.now(),
         }, {
           session,
