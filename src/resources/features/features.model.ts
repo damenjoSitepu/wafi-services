@@ -19,6 +19,7 @@ interface FeaturesDashboard {
   key: string;
   title: string;
   value: number;
+  icon: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -43,6 +44,10 @@ const FeaturesDashboardSchema = new Schema<FeaturesDashboard>({
   value: {
     type: Number,
     required: true,
+  },
+  icon: {
+    type: String,
+    required: false,
   },
   createdAt: {
     type: Number,

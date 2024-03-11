@@ -242,9 +242,10 @@ class FeaturesService {
    * 
    * @param {features.Data} feature
    * @param {string} fid 
+   * @param {mongoose.mongo.ClientSession} session
    * @returns {Promise<boolean>}
    */
-  public async toggleStatus(feature: features.Data ,fid: string): Promise<boolean> {
+  public async toggleStatus(feature: features.Data ,fid: string, session: mongoose.mongo.ClientSession): Promise<boolean> {
     try {
       // Validation When Feature Doesn't Exists
       if (!feature) throw new Error();
@@ -252,14 +253,14 @@ class FeaturesService {
       // Reverse The Is Active To Inactive / Active
       const isActive = !feature.isActive;
 
-      if (isActive) {
+      if (isActive || (!isActive && feature.allChildIds.length === 0)) {
         await this._featuresModel.updateOne({
           uid: AuthService.getInstance().user().uid,
           fid
         }, {
           isActive,
           updatedAt: Date.now(),
-        });
+        }, { session });
       } else if (!isActive && feature.allChildIds.length > 0) {
         // When Feature Set To Inactive, It Will Be Inactive All Their Sub Features
         await this._featuresModel.updateMany({
@@ -277,7 +278,7 @@ class FeaturesService {
         }, {
           isActive,
           updatedAt: Date.now(),
-        });
+        }, { session });
       }
 
       return isActive;
@@ -451,7 +452,7 @@ class FeaturesService {
       return await this._featuresDashboardModel.find({
         uid: AuthService.getInstance().user().uid,
         key: { $in: keys },
-      }).select({ key: 1, title: 1, value: 1 });
+      }).select({ key: 1, title: 1, value: 1, icon: 1 });
     } catch (e: any) {
       throw new Error(e.mesasge);
     }
@@ -480,6 +481,7 @@ class FeaturesService {
             key: req.key,
             title: req.title,
             value: req.value,
+            icon: req.icon,
             createdAt: Date.now(),
             updatedAt: Date.now(),
           }
@@ -487,6 +489,20 @@ class FeaturesService {
           session
         });
       } else if (featureDashboard) {
+        if (req.skipIncrementOrDecrement) {
+          // When Feature dashbaord with x key and n title already exists, just adjust the value (without increment or decrement)
+          await this._featuresDashboardModel.updateOne({
+            uid: AuthService.getInstance().user().uid,
+            key: req.key,
+            title: req.title
+          }, {
+            value: req.value,
+            updatedAt: Date.now(),
+          }, {
+            session,
+          });
+          return;
+        }
         // When Feature dashbaord with x key and n title already exists, just update the increment or decrement value
         await this._featuresDashboardModel.updateOne({
           uid: AuthService.getInstance().user().uid,
@@ -503,6 +519,23 @@ class FeaturesService {
       throw new Error(e.message);
     }
   } 
+
+  /**
+   * Count Total Actived / Inactived Status For Certain User
+   * @param {boolean} isActive 
+   * @param {mongoose.mongo.ClientSession} session
+   * @returns {Promise<number>}
+   */
+  public async countStatus(isActive: boolean, session?: mongoose.mongo.ClientSession): Promise<number> {
+    try {
+      return await this._featuresModel.countDocuments({
+        uid: AuthService.getInstance().user().uid,
+        isActive,
+      }, session ? { session } : {});
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 }
 
 export default FeaturesService;

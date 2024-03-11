@@ -32,5 +32,7 @@ export namespace features {
     title: string;
     isInc: boolean;
     value: number;
+    icon: string;
+    skipIncrementOrDecrement?: boolean;
   };
 }

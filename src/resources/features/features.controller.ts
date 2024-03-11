@@ -117,6 +117,14 @@ class FeaturesController {
         title: "Total Features",
         isInc: true,
         value: 1,
+        icon: "counter",
+      }, session);
+      await this._featuresService.settingDashboard({
+        key: req.body.isActive === "true" ? "totalActived" : "totalInactived",
+        title: req.body.isActive === "true" ? "Total Actived" : "Total Inactived",
+        isInc: true,
+        value: 1,
+        icon: req.body.isActive === "true" ? "on" : "off",
       }, session);
       await session.commitTransaction();
 
@@ -185,6 +193,8 @@ class FeaturesController {
     res: Response,
     next: NextFunction 
   ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+
     try {
       // Check The Feature Is Exists Or Not
       const feature: features.Data = await this._featuresService.findById(req.params.fid);
@@ -204,7 +214,30 @@ class FeaturesController {
         }
       }
 
-      const isActive: boolean = await this._featuresService.toggleStatus(feature, req.params.fid);
+      session.startTransaction();
+      const isActive: boolean = await this._featuresService.toggleStatus(feature, req.params.fid, session);
+
+      const totalActivedFeatures: number = await this._featuresService.countStatus(true, session);
+      const totalInactivedFeatures: number = await this._featuresService.countStatus(false, session);
+
+      await this._featuresService.settingDashboard({
+        key: "totalActived",
+        title: "Total Actived",
+        isInc: true,
+        value: totalActivedFeatures,
+        skipIncrementOrDecrement: true,
+        icon: "on",
+      }, session);
+
+      await this._featuresService.settingDashboard({
+        key: "totalInactived",
+        title: "Total Inactived",
+        isInc: true,
+        value: totalInactivedFeatures,
+        skipIncrementOrDecrement: true,
+        icon: "off",
+      }, session);
+      await session.commitTransaction();
 
       const features: features.Data[] = await this._featuresService.findParentAndTheirAllChildren(req.params.fid);
 
@@ -215,9 +248,12 @@ class FeaturesController {
         },
       });
     } catch (e: any) {
+      await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
         statement: statement.FEATURES.FAIL_TOGGLE_STATUS,
       });
+    } finally {
+      await session.endSession();
     }
   }
 
@@ -312,7 +348,30 @@ class FeaturesController {
         title: "Total Features",
         isInc: false,
         value: deletedFeaturesFid.length,
+        icon: "counter",
       }, session);
+
+      const totalActivedFeatures: number = await this._featuresService.countStatus(true, session);
+      const totalInactivedFeatures: number = await this._featuresService.countStatus(false, session);
+
+      await this._featuresService.settingDashboard({
+        key: "totalActived",
+        title: "Total Actived",
+        isInc: true,
+        value: totalActivedFeatures,
+        skipIncrementOrDecrement: true,
+        icon: "on",
+      }, session);
+
+      await this._featuresService.settingDashboard({
+        key: "totalInactived",
+        title: "Total Inactived",
+        isInc: true,
+        value: totalInactivedFeatures,
+        skipIncrementOrDecrement: true,
+        icon: "off",
+      }, session);
+
       await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
@@ -345,7 +404,7 @@ class FeaturesController {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
-      const dashboards: features.DashboardData[] = await this._featuresService.getDashboard(["totalFeatures"]);
+      const dashboards: features.DashboardData[] = await this._featuresService.getDashboard(["totalFeatures","totalActived","totalInactived"]);
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.FEATURES.SUCCESS_GET_ANALYTICS,
         data: {
