@@ -136,5 +136,7 @@ export namespace statement {
     FAIL_TOGGLE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE: "This module originates from a higher-level module that is currently inactive. You are not permitted to activate it unless the higher-level module is activated first.",
     SUCCESS_DELETE: "Successfully deleting the feature.",
     FAIL_DELETE: "Fail when deleting the feature.",
+    SUCCESS_GET_ANALYTICS: "Successfully getting feature analytics.",
+    FAIL_GET_ANALYTICS: "Fail when getting feature analytics.",
   };
 }

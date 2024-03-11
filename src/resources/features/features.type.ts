@@ -15,4 +15,21 @@ export namespace features {
     childIds: string[];
     allChildIds: string[];
   };
+
+  export type DashboardData = {
+    _id: string;
+    uid: string;
+    fdid: string;
+    key: string;
+    title: string;
+    value: number;
+    createdAt: number;
+    updatedAt: number;
+  };
+
+  export type SettingDashboardRequest = {
+    key: string;
+    title: string;
+    isInc: boolean;
+  };
 }

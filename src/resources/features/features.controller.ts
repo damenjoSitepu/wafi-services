@@ -112,6 +112,11 @@ class FeaturesController {
     try {
       session.startTransaction();
       const feature: features.Data = await this._featuresService.store(req.user, req, session);
+      await this._featuresService.settingDashboard({
+        key: "totalFeatures",
+        title: "Total Features",
+        isInc: true,
+      }, session);
       await session.commitTransaction();
 
       let parentFeature: any;
@@ -320,6 +325,34 @@ class FeaturesController {
   }
 
   /**
+   * Get Features Analytics
+   * 
+   * @param {Request} req
+   * @param {Response} res 
+   * @param {NextFunction} next 
+   * @returns {Promise<Response | void>}
+   */
+  private _getAnalytics = async(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> => {
+    try {
+      const dashboards: features.DashboardData[] = await this._featuresService.getDashboard(["totalFeatures"]);
+      return res.status(httpResponseStatusCode.SUCCESS.OK).json({
+        statement: statement.FEATURES.SUCCESS_GET_ANALYTICS,
+        data: {
+          analytics: this._collectionService.detachCredential(["_id","id"], dashboards),
+        }
+      });
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.FEATURES.FAIL_GET_ANALYTICS,
+      });
+    }
+  }
+
+  /**
    * Initialize Routes
    * 
    * @returns {void}
@@ -360,6 +393,13 @@ class FeaturesController {
       `${this.path}/:fid/toggle-status`,
       authMiddleware.express,
       this._toggleStatus,
+    );
+
+    // Get Feature Dashboard 
+    this.router.get(
+      `${this.path}/analytics`,
+      authMiddleware.express,
+      this._getAnalytics,
     );
 
     // Get Feature

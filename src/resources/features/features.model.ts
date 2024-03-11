@@ -13,6 +13,47 @@ interface Features extends Document {
   modifiedBy: string;
 }
 
+interface FeaturesDashboard {
+  uid: string;
+  fdid: string;
+  key: string;
+  title: string;
+  value: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+const FeaturesDashboardSchema = new Schema<FeaturesDashboard>({
+  uid: {
+    type: String,
+    required: true,
+  },
+  fdid: {
+    type: String,
+    required: true,
+  },
+  key: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: Number,
+    required: true,
+  },
+  createdAt: {
+    type: Number,
+    required: true,
+  },
+  updatedAt: {
+    type: Number,
+    required: true,
+  },
+});
+
 const FeaturesSchema = new Schema<Features>({
   uid: {
     type: String,
@@ -70,3 +111,4 @@ FeaturesSchema.virtual("isAbleToExpand").get(function () {
 });
 
 export const FeaturesModel = mongoose.model<Features>("features", FeaturesSchema, "features");
+export const FeaturesDashboardModel = mongoose.model<FeaturesDashboard>("featuresDashboards", FeaturesDashboardSchema, "featuresDashboards");

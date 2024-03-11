@@ -1,6 +1,6 @@
 import { statement } from "@/utils/constants/statement.constant";
 import { user } from "@/resources/user/user.type";
-import { FeaturesModel } from "@/resources/features/features.model";
+import { FeaturesModel, FeaturesDashboardModel } from "@/resources/features/features.model";
 import { Request } from "express";
 const { v4: uuidv4 } = require('uuid');
 import { features } from "@/resources/features/features.type";
@@ -12,6 +12,7 @@ class FeaturesService {
    * Models
    */
   private _featuresModel = FeaturesModel;
+  private _featuresDashboardModel = FeaturesDashboardModel;
 
   /**
    * Check Is Feature Name Is Exists Or Not (Case Insensitive Checker)
@@ -438,6 +439,70 @@ class FeaturesService {
       throw new Error(e.message);
     }
   }
+
+  /**
+   * Get Features Analytics / Dashboard
+   * 
+   * @param {string[]} keys 
+   * @returns {Promise<features.DashboardData[]>}
+   */
+  public async getDashboard(keys: string[]): Promise<features.DashboardData[]> {
+    try {
+      return await this._featuresDashboardModel.find({
+        uid: AuthService.getInstance().user().uid,
+        key: { $in: keys },
+      }).select({ key: 1, title: 1, value: 1 });
+    } catch (e: any) {
+      throw new Error(e.mesasge);
+    }
+  } 
+
+  /**
+   * Setting Dashboard To Increment 
+   * @param {features.SettingDashboardRequest} req 
+   * @param {mongoose.mongo.ClientSession} session 
+   * @returns {Promise<void>}
+   */
+  public async settingDashboard(req: features.SettingDashboardRequest, session: mongoose.mongo.ClientSession): Promise<void> {
+    try {
+      const featureDashboard: features.DashboardData = await this._featuresDashboardModel.findOne({
+        uid: AuthService.getInstance().user().uid,
+        key: req.key,
+        title: req.title,
+      }).select({ id: 1 });
+
+      if (!featureDashboard) {
+        // When Feature Dashboard With X key and N title doesn't exists, create for the first time
+        await this._featuresDashboardModel.create([
+          {
+            uid: AuthService.getInstance().user().uid,
+            fdid: uuidv4(),
+            key: req.key,
+            title: req.title,
+            value: 1,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          }
+        ], {
+          session
+        });
+      } else if (featureDashboard) {
+        // When Feature dashbaord with x key and n title already exists, just update the increment or decrement value
+        await this._featuresDashboardModel.updateOne({
+          uid: AuthService.getInstance().user().uid,
+          key: req.key,
+          title: req.title
+        }, {
+          $inc: { value: 1 },
+          updatedAt: Date.now(),
+        }, {
+          session,
+        });
+      }
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  } 
 }
 
 export default FeaturesService;
