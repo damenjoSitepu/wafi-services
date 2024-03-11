@@ -296,7 +296,7 @@ class FeaturesService {
       return await this._featuresModel.findOne({
         uid: AuthService.getInstance().user().uid,
         fid,
-      }).select({ fid: 1, name: 1, parent: 1, isActive: 1, "-_id": -1, childIds: 1, allChildIds: 1 })
+      }).select({ fid: 1, name: 1, parent: 1, isActive: 1, childIds: 1, allChildIds: 1 })
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -352,6 +352,88 @@ class FeaturesService {
         updatedAt: Date.now(),
         name,
       });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Delete The Feature And Its Own Dependencies
+   * 
+   * @param {string[]} fids 
+   * @param {mongoose.mongo.ClientSession} session 
+   * @returns {Promise<void>}
+   */
+  public async delete(fids: string[], session: mongoose.mongo.ClientSession): Promise<void> {
+    try {
+      await this._featuresModel.deleteMany({
+        uid: AuthService.getInstance().user().uid,
+        fid: { $in: fids },
+      }, {
+        session,
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Delete Child IDS From Its Own Parent
+   * 
+   * @param {features.Data} feature 
+   * @param {mongoose.mongo.ClientSession} session 
+   * @returns {Promise<void>}
+   */
+  public async deleteChildIds(feature: features.Data, session: mongoose.mongo.ClientSession): Promise<void> {
+    try {
+      if (!feature.parent) return;
+
+      const parentFeatures: features.Data[] = [await this.findParent(feature.parent)];
+      let i: number = 0;
+
+      while (true) {
+        if (!parentFeatures[i].parent) break;
+        const findParentFeature: features.Data = await this.findParent(parentFeatures[i].parent ?? "");
+        if (!findParentFeature) break;
+        parentFeatures.push(findParentFeature);
+        i++;
+        if (!findParentFeature.parent) break;
+      }
+
+      // Index Zero Will Be The One Level Higher Module Refer To Deleted Features, So Will Be Delete ChildIds and AllChildIds
+      await this._featuresModel.updateOne({
+        uid: AuthService.getInstance().user().uid,
+        fid: parentFeatures[0].fid,
+      }, {
+        updatedAt: Date.now(),
+        $pull: {
+          childIds: feature._id,
+          allChildIds: {
+            $in: [feature._id, ...feature.allChildIds]
+          },
+        }
+      }, {
+        session,
+      });
+
+      if (parentFeatures.length > 1) {
+        // Except The First One Because Its Already Executed
+        const parentFeaturesFid: string[] = [...parentFeatures].filter((_: features.Data, i: number) => i > 0)
+          .map((feature: features.Data) => feature.fid);
+        if (parentFeaturesFid.length > 0) {
+          await this._featuresModel.updateMany({
+            uid: AuthService.getInstance().user().uid,
+            fid: { $in: parentFeaturesFid },
+          }, {
+            updatedAt: Date.now(),
+            $pull: {
+              allChildIds: { $in: [feature._id, ...feature.allChildIds] }
+            }
+          }, {
+            session,
+          });
+        }
+      }
     } catch (e: any) {
       throw new Error(e.message);
     }

@@ -100,7 +100,7 @@ class FeaturesController {
         return res.status(httpResponseStatusCode.FAIL.FORBIDDEN).json({
           statement: statement.FEATURES.FAIL_STORE_STATUS_HIGHER_LEVEL_MODULE_CURRENTLY_INACTIVE,
         });
-      } else {
+      } else if (!checkParentIsActive) {
         return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
           statement: statement.FEATURES.FAIL_STORE_PARENT_NOT_FOUND,
         });
@@ -278,6 +278,8 @@ class FeaturesController {
     res: Response,
     next: NextFunction
   ): Promise<Response | void> => {
+    const session: mongoose.mongo.ClientSession = await mongoose.startSession();
+    
     try {
       // Make sure that feature is exists
       const feature: features.Data = await this._featuresService.findById(req.params.fid);
@@ -286,20 +288,34 @@ class FeaturesController {
           statement: statement.FEATURES.FAIL_FIND,
         });
       }
-      // ABC
 
-      // Delete feature mechanism: 
-      // 1. Make sure that feature is exists
-      // 1. delete the feature and its own all child ids.
-      // 2. if the deleted feature have parent, we also need to delete childIds and allchildids on the parent feature
+      // Make Sure That feature want to deleted and its own dependencies (if available) is exists (2nd)
+      const deletedFeaturesFid: string[] = (await this._featuresService.findParentAndTheirAllChildren(req.params.fid)).map((feature: features.Data) => feature.fid);
+      if (deletedFeaturesFid.length === 0) {
+        return res.status(httpResponseStatusCode.FAIL.NOT_FOUND).json({
+          statement: statement.FEATURES.FAIL_FIND,
+        });
+      }
+
+      session.startTransaction();
+      // Delete the feature and its own all child ids.
+      await this._featuresService.delete(deletedFeaturesFid, session);
+      await this._featuresService.deleteChildIds(feature, session);
+      await session.commitTransaction();
 
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.FEATURES.SUCCESS_DELETE,
+        data: {
+          deletedFeaturesIds: deletedFeaturesFid,
+        },
       });
     } catch (e: any) {
+      await session.abortTransaction();
       return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
         statement: e.message,
       });
+    } finally {
+      session.endSession();
     }
   }
 
