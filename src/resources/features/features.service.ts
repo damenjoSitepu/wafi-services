@@ -1,11 +1,14 @@
 import { statement } from "@/utils/constants/statement.constant";
 import { user } from "@/resources/user/user.type";
 import { FeaturesModel, FeaturesDashboardModel } from "@/resources/features/features.model";
-import { Request } from "express";
+import { Request, Response } from "express";
 const { v4: uuidv4 } = require('uuid');
 import { features } from "@/resources/features/features.type";
 import mongoose from "mongoose";
 import AuthService from "@/utils/services/auth.service";
+import CollectionService from "@/utils/services/collection.service";
+import { customStatusCode } from "@/utils/constants/custom-status-code.constant";
+import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
 
 class FeaturesService {
   /**
@@ -13,6 +16,11 @@ class FeaturesService {
    */
   private _featuresModel = FeaturesModel;
   private _featuresDashboardModel = FeaturesDashboardModel;
+
+  /**
+   * Services
+   */
+  private _collectionService: CollectionService = new CollectionService();
 
   /**
    * Check Is Feature Name Is Exists Or Not (Case Insensitive Checker)
@@ -535,6 +543,59 @@ class FeaturesService {
     } catch (e: any) {
       throw new Error(e.message);
     }
+  }
+
+  /**
+   * Check Global App Feature Status (Base On Feature Is Active Status)
+   * 
+   * @param {string[]} featureNames 
+   * @returns {Promise<boolean>}
+   */
+  public async checkGlobalAppFeatureStatus(featureNames: string[]): Promise<boolean> {
+    try {
+      const totalFeaturesFound: number = await this._featuresModel.countDocuments({
+        name: { $in: featureNames },
+        isActive: true,
+      });
+
+      // If total features found from database not match to feature Names length, we know that user cannot access the features
+      return totalFeaturesFound === featureNames.length;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Find Feature By Names
+   * 
+   * @param {string[]} featureNames 
+   * @returns {Promise<features.Data[]>}
+   */
+  public async findByNames(featureNames: string[]): Promise<features.Data[]> {
+    try {
+      return await this._featuresModel.find({
+        name: { $in: featureNames },
+      }).select({ id: 1, name: 1, isActive: 1 });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  /**
+   * Handle Error Unauthorized To Access Feature
+   * 
+   * @param {string[]} featureNames 
+   * @param {Response} res 
+   * @returns {Promise<Response>}
+   */
+  public async handleErrorUnauthorizedToAccessFeature(featureNames: string[], res: Response): Promise<Response> {
+    const featuresAffected: features.Data[] = await this.findByNames(featureNames);
+
+    return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+      errCode: customStatusCode.FAIL.FEATURE_DEACTIVATED,
+      featuresAffected: this._collectionService.detachCredential(["_id","id","isAbleToExpand"], featuresAffected),
+      statement: statement.APP.FEATURE_DEACTIVATED,
+    });
   }
 }
 

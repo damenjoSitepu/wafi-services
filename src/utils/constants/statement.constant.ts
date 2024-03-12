@@ -1,4 +1,8 @@
 export namespace statement {
+  export const APP = {
+    FEATURE_DEACTIVATED: "It seems like this feature is currently disabled by our system for some reasons. Please try again later.",
+  };
+
   export const EXPRESS_APP = {
     INITIALIZED: "Wafi Services Run Perfectly",
     NO_CONTROLLERS: "No controllers found. Please check your app configuration once again.",

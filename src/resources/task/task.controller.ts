@@ -3,6 +3,7 @@ import { statement } from "@/utils/constants/statement.constant";
 import ControllerContract from "@/utils/contracts/controller.contract";
 import TaskService from "@/resources/task/task.service";
 import { httpResponseStatusCode } from "@/utils/constants/http-response-status-code.constant";
+import { customStatusCode } from "@/utils/constants/custom-status-code.constant";
 import validationMiddleware from "@/middlewares/validation.middleware";
 import { taskValidation } from "@/resources/task/task.validation";
 import authMiddleware from "@/middlewares/auth.middleware";
@@ -10,6 +11,9 @@ import { task } from "./task.type";
 import mongoose from "mongoose";
 import MicrosoftTeamsIntegrationService from "@/resources/microsoft-teams-integration/microsoft-teams-integration.service";
 import ActivityLogsService from "@/resources/activity-logs/activity-logs.service";
+import { globalAppPermission } from "@/utils/permissions/global-app.permission";
+import FeaturesService from "@/resources/features/features.service";
+import { features } from "../features/features.type";
 
 class TaskController implements ControllerContract {
   /**
@@ -27,6 +31,7 @@ class TaskController implements ControllerContract {
    */
   private _taskService: TaskService = new TaskService();
   private _activityLogsService: ActivityLogsService = new ActivityLogsService();
+  private _featuresService: FeaturesService = new FeaturesService();
 
   /**
    * Initialize Data
@@ -49,6 +54,12 @@ class TaskController implements ControllerContract {
     next: NextFunction
   ): Promise<Response | void> => {
     try {
+      // Feature Permission Checker
+      const permission = await this._featuresService.checkGlobalAppFeatureStatus(globalAppPermission.TASK.GET);
+      if (!permission) {
+        return this._featuresService.handleErrorUnauthorizedToAccessFeature(globalAppPermission.TASK.GET, res);
+      }
+
       const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? ""), Number(req.query.page ?? 1), req) as task.Data[];
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.GET,
