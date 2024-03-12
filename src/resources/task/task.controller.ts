@@ -59,7 +59,13 @@ class TaskController implements ControllerContract {
       if (!permission) {
         return this._featuresService.handleErrorUnauthorizedToAccessFeature(globalAppPermission.TASK.GET, res);
       }
+    } catch (e: any) {
+      return res.status(httpResponseStatusCode.FAIL.UNPROCESSABLE_ENTITY).json({
+        statement: statement.APP.NO_FEATURE_CHECKER,
+      });
+    }
 
+    try {
       const tasks: task.Data[] = await this._taskService.get(req.user, String(req.query.q ?? ""), Number(req.query.page ?? 1), req) as task.Data[];
       return res.status(httpResponseStatusCode.SUCCESS.OK).json({
         statement: statement.TASK.GET,

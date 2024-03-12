@@ -589,13 +589,34 @@ class FeaturesService {
    * @returns {Promise<Response>}
    */
   public async handleErrorUnauthorizedToAccessFeature(featureNames: string[], res: Response): Promise<Response> {
-    const featuresAffected: features.Data[] = await this.findByNames(featureNames);
+    try {
+      // Throw error when features name none (No features permission we want to check)
+      if (featureNames.length === 0) throw new Error();
 
-    return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
-      errCode: customStatusCode.FAIL.FEATURE_DEACTIVATED,
-      featuresAffected: this._collectionService.detachCredential(["_id","id","isAbleToExpand"], featuresAffected),
-      statement: statement.APP.FEATURE_DEACTIVATED,
-    });
+      const featuresAffected: features.Data[] = await this.findByNames(featureNames);
+
+      const featureAffectedList: { name: string, isActive: boolean }[] = [];
+      featureNames.forEach((name) => {
+        try {
+          const findFeatureAffected: features.Data | undefined = [...featuresAffected].find((f) => f.name === name);
+          if (!findFeatureAffected) {
+            // If feature not found on collection, set isActive false by default
+            featureAffectedList.push({ name, isActive: false }); 
+          } else {
+            // Set isActive base on isActive column on the collection
+            featureAffectedList.push({ name, isActive: findFeatureAffected.isActive }); 
+          }
+        } catch (e: any) {}
+      });
+  
+      return res.status(httpResponseStatusCode.FAIL.UNAUTHORIZED).json({
+        errCode: customStatusCode.FAIL.FEATURE_DEACTIVATED,
+        featuresAffected: featureAffectedList,
+        statement: statement.APP.FEATURE_DEACTIVATED,
+      });
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
   }
 }
 

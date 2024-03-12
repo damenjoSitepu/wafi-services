@@ -1,6 +1,7 @@
 export namespace statement {
   export const APP = {
     FEATURE_DEACTIVATED: "It seems like this feature is currently disabled by our system for some reasons. Please try again later.",
+    NO_FEATURE_CHECKER: "No feature registered for this module. Please contact admin for more detail.",
   };
 
   export const EXPRESS_APP = {
